@@ -4,9 +4,16 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.example.demo.dtos.AnnouncementDTO;
+import com.example.demo.dtos.AnnouncementCreateDTO;
+import com.example.demo.dtos.AnnouncementDetailDTO;
+import com.example.demo.dtos.AnnouncementListDTO;
+import com.example.demo.exceptions.custom.ResourceNotFoundException;
 import com.example.demo.model.Announcement;
+import com.example.demo.model.User;
 import com.example.demo.repositories.AnnouncementRepository;
+import com.example.demo.repositories.UserRepository;
+
+import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
@@ -15,34 +22,77 @@ import lombok.RequiredArgsConstructor;
 public class AnnouncementService {
 
     private final AnnouncementRepository repository;
+    private final UserRepository userRepository;
 
-    public List<AnnouncementDTO> findAll() {
-        return repository.findAll().stream().map(a -> new AnnouncementDTO(a.getId(), a.getFullname(), a.getPhone(), a.getStreet(), a.getStreet(), a.getCep(), a.getCep(), a.getComplement(), a.getPropertyType(), a.getReason())).toList();
+    @Transactional(readOnly = true)
+    public List<AnnouncementListDTO> findAll() {
+        return repository.findAll().stream().map(this::toListDTO).toList();
     }
 
-    public AnnouncementDTO create(AnnouncementDTO dto) {
-        var entity = new Announcement();
-        entity.setFullname(dto.fullname());
-        entity.setPhone(dto.phone());
+    public AnnouncementDetailDTO create(AnnouncementCreateDTO dto, String email) {
+        Announcement entity = new Announcement();
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
+
+        mapDtoToEntity(dto, entity, user);
+
+        Announcement saved = repository.save(entity);
+
+        return toDetailDTO(saved);
+    }
+
+    private AnnouncementListDTO toListDTO(Announcement announcement) {
+        return new AnnouncementListDTO(
+            announcement.getId(),
+            announcement.getTitle(),
+            announcement.getCity(),
+            announcement.getState(),
+            announcement.getImage(),
+            announcement.getPropertyType(),
+            announcement.getReason(),
+            announcement.getRooms(),
+            announcement.getBathRooms(),
+            announcement.getArea(),
+            announcement.getPrice()
+        );
+    }
+
+    private void mapDtoToEntity(AnnouncementCreateDTO dto, Announcement entity, User user) {
+        entity.setTitle(dto.title());
+        entity.setDescription(dto.description());
+        entity.setCity(dto.city());
+        entity.setState(dto.state());
+        entity.setImage(dto.image());
         entity.setStreet(dto.street());
+        entity.setStreetNumber(dto.streetNumber());
         entity.setCep(dto.cep());
         entity.setComplement(dto.complement());
+        entity.setRooms(dto.rooms());
+        entity.setBathRooms(dto.bathRooms());
+        entity.setArea(dto.area());
+        entity.setPrice(dto.price());
         entity.setPropertyType(dto.propertyType());
         entity.setReason(dto.reason());
+        entity.setUser(user);
+    }
 
-        var saved = repository.save(entity);
-
-        return new AnnouncementDTO(
-            saved.getId(),
-            saved.getFullname(),
-            saved.getPhone(),
-            saved.getStreet(),
-            saved.getStreet(),
-            saved.getCep(),
-            saved.getCep(),
-            saved.getComplement(),
-            saved.getPropertyType(),
-            saved.getReason()
+    private AnnouncementDetailDTO toDetailDTO(Announcement announcement) {
+        return new AnnouncementDetailDTO(
+            announcement.getId(), 
+            announcement.getTitle(),
+            announcement.getDescription(),
+            announcement.getCity(),
+            announcement.getState(),
+            announcement.getStreet(),
+            announcement.getImage(),
+            announcement.getStreetNumber(),
+            announcement.getCep(),
+            announcement.getComplement(),
+            announcement.getPropertyType(),
+            announcement.getReason(),
+            announcement.getRooms(),
+            announcement.getBathRooms(),
+            announcement.getPrice(),
+            announcement.getArea()
         );
     }
 

@@ -2,36 +2,49 @@ package com.example.demo.controllers;
 
 import java.util.List;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 
-import com.example.demo.dtos.AnnouncementDTO;
+import com.example.demo.dtos.AnnouncementCreateDTO;
+import com.example.demo.dtos.AnnouncementDetailDTO;
+import com.example.demo.dtos.AnnouncementListDTO;
 import com.example.demo.services.AnnouncementService;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+
+@Tag(name = "Announcements")
 @RestController
-@RequestMapping("/announcements")
+@RequestMapping("/api/v1/announcements")
+@RequiredArgsConstructor
 public class AnnouncementController {
 
-    private final AnnouncementService service;
+    private final AnnouncementService announcementService;
 
-    public AnnouncementController(AnnouncementService service) {
-        this.service = service;
-    }
-
-    // 🔍 LISTAR TODOS
+    @Operation(summary = "Buscar anúncios")
     @GetMapping
-    public List<AnnouncementDTO> list() {
-        return service.findAll();
+    public ResponseEntity<List<AnnouncementListDTO>> list() {
+        return ResponseEntity.ok(announcementService.findAll());
     }
 
     // @GetMapping("/{id}")
-    // public AnnouncementDTO findOne(@PathVariable Long id) {
+    // public AnnouncementCreateDTO findOne(@PathVariable Long id) {
     //     return service.findOne(id);
     // }
 
-    // ➕ CRIAR
+    @Operation(summary = "Criar anúncio")
     @PostMapping
-    public AnnouncementDTO create(@RequestBody AnnouncementDTO dto) {
-        return service.create(dto);
+    public ResponseEntity<AnnouncementDetailDTO> create(
+        @Valid @RequestBody AnnouncementCreateDTO dto, 
+        @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        System.out.println(userDetails.getUsername());
+        return ResponseEntity.ok(announcementService.create(dto, userDetails.getUsername()));
     }
 
     // @PutMapping("/{id}")
