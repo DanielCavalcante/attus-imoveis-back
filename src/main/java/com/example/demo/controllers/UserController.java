@@ -10,22 +10,21 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import com.example.demo.dtos.UserDTO;
 import com.example.demo.dtos.UserDetailDTO;
 import com.example.demo.dtos.UserListDTO;
+import com.example.demo.dtos.UserUpdateDTO;
 import com.example.demo.services.UserService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 @Tag(name = "Users")
 @RestController
 @RequestMapping("/api/v1/users")
+@RequiredArgsConstructor
 public class UserController {
 
     private final UserService userService;
-
-    public UserController(UserService userService) {
-        this.userService = userService;
-    }
 
     @Operation(summary = "Buscar usuários")
     @GetMapping
@@ -57,7 +56,7 @@ public class UserController {
     @PutMapping("/{id}")
     public ResponseEntity<UserDetailDTO> update(
         @PathVariable Long id,
-        @Valid @RequestBody UserDTO dto
+        @Valid @RequestBody UserUpdateDTO dto
     ) {
         return ResponseEntity.ok(userService.edit(id, dto));
     }

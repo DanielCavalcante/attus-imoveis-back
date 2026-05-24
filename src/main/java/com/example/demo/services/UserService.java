@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.demo.dtos.UserDTO;
 import com.example.demo.dtos.UserDetailDTO;
 import com.example.demo.dtos.UserListDTO;
+import com.example.demo.dtos.UserUpdateDTO;
 import com.example.demo.exceptions.custom.BusinessException;
 import com.example.demo.exceptions.custom.ResourceNotFoundException;
 import com.example.demo.model.User;
@@ -51,15 +52,12 @@ public class UserService {
     }
 
     @Transactional
-    public UserDetailDTO edit(Long id, UserDTO dto) {
+    public UserDetailDTO edit(Long id, UserUpdateDTO dto) {
         User entity = findUserById(id);
 
-        validatePasswords(dto);
         validateEmailUpdate(dto.email(), entity);
         validatePhoneUpdate(dto.phone(), entity);
-
-        mapDtoToEntity(dto, entity);
-        entity.setPassword(passwordEncoder.encode(dto.password()));
+        mapUpdateDtoToEntity(dto, entity);
 
         User saved = repository.save(entity);
 
@@ -113,6 +111,13 @@ public class UserService {
     }
 
     private void mapDtoToEntity(UserDTO dto, User entity) {
+        entity.setFullname(dto.fullname());
+        entity.setEmail(dto.email());
+        entity.setPhone(dto.phone());
+        entity.setPhoto(dto.photo());
+    }
+
+    private void mapUpdateDtoToEntity(UserUpdateDTO dto, User entity) {
         entity.setFullname(dto.fullname());
         entity.setEmail(dto.email());
         entity.setPhone(dto.phone());
