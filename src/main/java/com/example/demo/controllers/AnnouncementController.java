@@ -55,9 +55,13 @@ public class AnnouncementController {
     //     return service.edit(id, dto);
     // }
 
-    // 🗑️ DELETAR
     // @DeleteMapping("/{id}")
     // public void delete(@PathVariable Long id) {
     //     service.delete(id);
     // }
+
+    @GetMapping("/me")
+    public ResponseEntity<List<AnnouncementListDTO>> myAnnouncements(@AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(announcementService.findByUser(userDetails.getUsername()));
+    }
 }

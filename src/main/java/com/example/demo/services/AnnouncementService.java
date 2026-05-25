@@ -26,7 +26,7 @@ public class AnnouncementService {
 
     @Transactional(readOnly = true)
     public List<AnnouncementListDTO> findAll() {
-        return repository.findAll().stream().map(this::toListDTO).toList();
+        return repository.findAll().stream().map(AnnouncementListDTO::fromEntity).toList();
     }
 
     public AnnouncementDetailDTO create(AnnouncementCreateDTO dto, String email) {
@@ -38,22 +38,6 @@ public class AnnouncementService {
         Announcement saved = repository.save(entity);
 
         return toDetailDTO(saved);
-    }
-
-    private AnnouncementListDTO toListDTO(Announcement announcement) {
-        return new AnnouncementListDTO(
-            announcement.getId(),
-            announcement.getTitle(),
-            announcement.getCity(),
-            announcement.getState(),
-            announcement.getImage(),
-            announcement.getPropertyType(),
-            announcement.getReason(),
-            announcement.getRooms(),
-            announcement.getBathRooms(),
-            announcement.getArea(),
-            announcement.getPrice()
-        );
     }
 
     private void mapDtoToEntity(AnnouncementCreateDTO dto, Announcement entity, User user) {
@@ -94,6 +78,11 @@ public class AnnouncementService {
             announcement.getPrice(),
             announcement.getArea()
         );
+    }
+
+    public List<AnnouncementListDTO> findByUser(String email) {
+        List<Announcement> announcements = repository.findByUserEmail(email);
+        return announcements.stream().map(AnnouncementListDTO::fromEntity).toList();
     }
 
 }
