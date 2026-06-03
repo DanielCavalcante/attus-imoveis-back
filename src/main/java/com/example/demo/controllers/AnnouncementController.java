@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -32,10 +31,10 @@ public class AnnouncementController {
         return ResponseEntity.ok(announcementService.findAll());
     }
 
-    // @GetMapping("/{id}")
-    // public AnnouncementCreateDTO findOne(@PathVariable Long id) {
-    //     return service.findOne(id);
-    // }
+    @GetMapping("/{id}")
+    public ResponseEntity<AnnouncementDetailDTO> findOne(@PathVariable Long id) {
+        return ResponseEntity.ok(announcementService.findOne(id));
+    }
 
     @Operation(summary = "Criar anúncio")
     @PostMapping

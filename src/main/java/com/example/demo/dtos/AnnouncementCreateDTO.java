@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import com.example.demo.enums.PropertyType;
 import com.example.demo.enums.ReasonType;
 
-import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;

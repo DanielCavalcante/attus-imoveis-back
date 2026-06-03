@@ -2,6 +2,7 @@ package com.example.demo.services;
 
 import java.util.List;
 
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
 import com.example.demo.dtos.AnnouncementCreateDTO;
@@ -29,6 +30,7 @@ public class AnnouncementService {
         return repository.findAll().stream().map(AnnouncementListDTO::fromEntity).toList();
     }
 
+    @Transactional
     public AnnouncementDetailDTO create(AnnouncementCreateDTO dto, String email) {
         Announcement entity = new Announcement();
         User user = userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
@@ -80,9 +82,16 @@ public class AnnouncementService {
         );
     }
 
+    @Transactional(readOnly = true)
     public List<AnnouncementListDTO> findByUser(String email) {
         List<Announcement> announcements = repository.findByUserEmail(email);
         return announcements.stream().map(AnnouncementListDTO::fromEntity).toList();
+    }
+
+    public AnnouncementDetailDTO findOne(@NonNull Long id) {
+        Announcement announcement = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Anúncio não encontrado com id: " + id));
+
+        return toDetailDTO(announcement);
     }
 
 }
