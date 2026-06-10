@@ -11,7 +11,7 @@ import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size; 
 
-public record AnnouncementCreateDTO(
+public record AnnouncementUpdateDTO(
 
     @NotBlank(message = "Título é obrigatório")
     @Size(max = 120, message = "Título deve ter no máximo 120 caracteres")

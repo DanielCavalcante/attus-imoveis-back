@@ -3,6 +3,7 @@ package com.example.demo.controllers;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -10,6 +11,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import com.example.demo.dtos.AnnouncementCreateDTO;
 import com.example.demo.dtos.AnnouncementDetailDTO;
 import com.example.demo.dtos.AnnouncementListDTO;
+import com.example.demo.dtos.AnnouncementUpdateDTO;
 import com.example.demo.services.AnnouncementService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,7 +34,7 @@ public class AnnouncementController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<AnnouncementDetailDTO> findOne(@PathVariable Long id) {
+    public ResponseEntity<AnnouncementDetailDTO> findOne(@PathVariable @NonNull Long id) {
         return ResponseEntity.ok(announcementService.findOne(id));
     }
 
@@ -42,17 +44,17 @@ public class AnnouncementController {
         @Valid @RequestBody AnnouncementCreateDTO dto, 
         @AuthenticationPrincipal UserDetails userDetails
     ) {
-        System.out.println(userDetails.getUsername());
         return ResponseEntity.ok(announcementService.create(dto, userDetails.getUsername()));
     }
 
-    // @PutMapping("/{id}")
-    // public AnnouncementDTO update(
-    //     @PathVariable Long id,
-    //     @RequestBody AnnouncementDTO dto
-    // ) {
-    //     return service.edit(id, dto);
-    // }
+    @PutMapping("/{id}")
+    public ResponseEntity<AnnouncementDetailDTO> update(
+        @PathVariable Long id,
+        @Valid @RequestBody AnnouncementUpdateDTO dto,
+        @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        return ResponseEntity.ok(announcementService.edit(id, dto, userDetails.getUsername()));
+    }
 
     // @DeleteMapping("/{id}")
     // public void delete(@PathVariable Long id) {
