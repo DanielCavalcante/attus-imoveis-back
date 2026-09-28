@@ -35,6 +35,11 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
       JWT_SECRET: ${JWT_SECRET:-33YAIuZ5P9QDy3rysBBLAEFglXNLsAHQ}
+      # Conta da equipe interna. Valores de desenvolvimento; em producao estas
+      # mesmas variaveis vem do Terraform, nunca do repositorio.
+      ATTUS_BOOTSTRAP_INTERNAL_EMAIL: ${ATTUS_BOOTSTRAP_INTERNAL_EMAIL:-interno@attus.dev}
+      ATTUS_BOOTSTRAP_INTERNAL_PASSWORD: ${ATTUS_BOOTSTRAP_INTERNAL_PASSWORD:-InternoDev123}
+      ATTUS_BOOTSTRAP_INTERNAL_PHONE: ${ATTUS_BOOTSTRAP_INTERNAL_PHONE:-11900000001}
     ports:
       - "8080:8080"
 
