@@ -121,6 +121,17 @@ public class Announcement {
     @OneToMany(mappedBy = "announcement", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<AnnouncementView> views = new ArrayList<>();
 
+    /**
+     * Titulo, cidade e estado em minuscula e sem acento, para a busca.
+     *
+     * Mantida aqui e nao na consulta: expressao de indice exigiria involucro
+     * IMMUTABLE sobre unaccent, e a consulta teria de ser nativa -- onde o
+     * ORDER BY do Pageable usaria o nome cru da propriedade e "createdAt" nao
+     * existe no SQL.
+     */
+    @Column(name = "search_text", columnDefinition = "TEXT")
+    private String searchText;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
@@ -130,11 +141,33 @@ public class Announcement {
     @PrePersist
     public void prePersist() {
         createdAt = LocalDateTime.now();
+        atualizarBusca();
     }
 
     @PreUpdate
     public void preUpdate() {
         updatedAt = LocalDateTime.now();
+        atualizarBusca();
+    }
+
+    /** Precisa concordar com o unaccent do Postgres usado na carga da V3. */
+    private void atualizarBusca() {
+        String bruto = "%s %s %s".formatted(
+            title == null ? "" : title,
+            city == null ? "" : city,
+            state == null ? "" : state
+        );
+
+        // Bloco dos diacriticos combinantes, escrito como intervalo de codigo:
+        // a classe \p{...} atravessa mal as camadas de escape das ferramentas.
+        searchText = java.text.Normalizer
+            .normalize(bruto, java.text.Normalizer.Form.NFD)
+            .replaceAll("[̀-ͯ]", "")
+            .toLowerCase();
+    }
+
+    public String getSearchText() {
+        return searchText;
     }
 
     public Long getId() {
