@@ -1,0 +1,9 @@
+.git
+.gitignore
+.gitattributes
+target
+Dockerfile
+.dockerignore
+docker-compose.yml
+README.md
+CLAUDE.md

@@ -54,27 +54,6 @@ public class AnnouncementService {
         return mapper.toDetailDTO(saved);
     }
 
-    private AnnouncementDetailDTO toDetailDTO(Announcement announcement) {
-        return new AnnouncementDetailDTO(
-            announcement.getId(), 
-            announcement.getTitle(),
-            announcement.getDescription(),
-            announcement.getCity(),
-            announcement.getState(),
-            announcement.getStreet(),
-            announcement.getImage(),
-            announcement.getStreetNumber(),
-            announcement.getCep(),
-            announcement.getComplement(),
-            announcement.getPropertyType(),
-            announcement.getReason(),
-            announcement.getRooms(),
-            announcement.getBathRooms(),
-            announcement.getPrice(),
-            announcement.getArea()
-        );
-    }
-
     @Transactional(readOnly = true)
     public List<AnnouncementListDTO> findByUser(String email) {
         List<Announcement> announcements = repository.findByUserEmail(email);
@@ -84,7 +63,7 @@ public class AnnouncementService {
     @Transactional(readOnly = true)
     public AnnouncementDetailDTO findOne(@NonNull Long id) {
         Announcement announcement = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Anúncio não encontrado com id: " + id));
-        return toDetailDTO(announcement);
+        return mapper.toDetailDTO(announcement);
     }
 
 }

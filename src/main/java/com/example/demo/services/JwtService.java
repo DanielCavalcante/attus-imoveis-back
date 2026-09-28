@@ -36,7 +36,7 @@ public class JwtService {
 
         claims.put("id", user.getId());
         claims.put("email", user.getEmail());
-        claims.put("fullName", user.getFullname());
+        claims.put("fullname", user.getFullname());
         claims.put("photo", user.getPhoto());
 
         return Jwts.builder()
