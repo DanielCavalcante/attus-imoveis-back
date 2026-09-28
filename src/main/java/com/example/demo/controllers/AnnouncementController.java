@@ -2,9 +2,16 @@ package com.example.demo.controllers;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.*;
+import java.util.Set;
+
+import com.example.demo.exceptions.custom.BusinessException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -36,8 +43,31 @@ public class AnnouncementController {
 
     @Operation(summary = "Buscar anúncios")
     @GetMapping
-    public ResponseEntity<List<AnnouncementListDTO>> list() {
-        return ResponseEntity.ok(announcementService.findAll());
+    public ResponseEntity<Page<AnnouncementListDTO>> list(
+        @RequestParam(required = false) String q,
+        @PageableDefault(size = 12, sort = "createdAt", direction = Sort.Direction.DESC)
+        Pageable pageable
+    ) {
+        validarOrdenacao(pageable);
+
+        return ResponseEntity.ok(announcementService.findAll(q, pageable));
+    }
+
+    /**
+     * Pageable aceita qualquer nome de propriedade vindo da URL. Ordenar por
+     * campo arbitrario e canal lateral: da para inferir valor de coluna que
+     * ninguem devia ler, comparando a ordem entre requisicoes.
+     */
+    private static final Set<String> ORDENACAO_PERMITIDA = Set.of("createdAt", "price");
+
+    private void validarOrdenacao(Pageable pageable) {
+        pageable.getSort().forEach(ordem -> {
+            if (!ORDENACAO_PERMITIDA.contains(ordem.getProperty())) {
+                throw new BusinessException(
+                    "Ordenacao permitida apenas por: " + String.join(", ", ORDENACAO_PERMITIDA)
+                );
+            }
+        });
     }
 
     @GetMapping("/{id}")
@@ -80,18 +110,24 @@ public class AnnouncementController {
 
     @Operation(summary = "Anuncios favoritados pela conta")
     @GetMapping("/me/favoritos")
-    public ResponseEntity<List<AnnouncementListDTO>> favorites(
-        @AuthenticationPrincipal UserDetails userDetails
+    public ResponseEntity<Page<AnnouncementListDTO>> favorites(
+        @AuthenticationPrincipal UserDetails userDetails,
+        @PageableDefault(size = 20) Pageable pageable
     ) {
-        return ResponseEntity.ok(userLibraryService.favorites(userDetails.getUsername()));
+        return ResponseEntity.ok(
+            userLibraryService.favorites(userDetails.getUsername(), pageable)
+        );
     }
 
     @Operation(summary = "Anuncios vistos pela conta, do mais recente ao mais antigo")
     @GetMapping("/me/historico")
-    public ResponseEntity<List<AnnouncementListDTO>> history(
-        @AuthenticationPrincipal UserDetails userDetails
+    public ResponseEntity<Page<AnnouncementListDTO>> history(
+        @AuthenticationPrincipal UserDetails userDetails,
+        @PageableDefault(size = 20) Pageable pageable
     ) {
-        return ResponseEntity.ok(userLibraryService.history(userDetails.getUsername()));
+        return ResponseEntity.ok(
+            userLibraryService.history(userDetails.getUsername(), pageable)
+        );
     }
 
     @Operation(summary = "Criar anúncio")
@@ -147,7 +183,13 @@ public class AnnouncementController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<List<AnnouncementListDTO>> myAnnouncements(@AuthenticationPrincipal UserDetails userDetails) {
-        return ResponseEntity.ok(announcementService.findByUser(userDetails.getUsername()));
+    public ResponseEntity<Page<AnnouncementListDTO>> myAnnouncements(
+        @AuthenticationPrincipal UserDetails userDetails,
+        @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC)
+        Pageable pageable
+    ) {
+        return ResponseEntity.ok(
+            announcementService.findByUser(userDetails.getUsername(), pageable)
+        );
     }
 }

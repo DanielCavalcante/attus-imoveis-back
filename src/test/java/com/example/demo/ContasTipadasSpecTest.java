@@ -259,7 +259,7 @@ class ContasTipadasSpecTest extends PostgresIntegrationTest {
     void c15() throws Exception {
         mockMvc.perform(get("/api/v1/announcements"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$").isArray());
+            .andExpect(jsonPath("$.content").isArray());
     }
 
     // ---------- apoio ----------

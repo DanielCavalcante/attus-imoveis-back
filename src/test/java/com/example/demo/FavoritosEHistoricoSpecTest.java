@@ -116,7 +116,7 @@ class FavoritosEHistoricoSpecTest extends PostgresIntegrationTest {
         mockMvc.perform(get("/api/v1/announcements/me/favoritos")
                 .header("Authorization", "Bearer " + tokenDe(email)))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$[0].id").value(anuncio));
+            .andExpect(jsonPath("$.content[0].id").value(anuncio));
     }
 
     @Test
@@ -129,10 +129,10 @@ class FavoritosEHistoricoSpecTest extends PostgresIntegrationTest {
 
         mockMvc.perform(get("/api/v1/announcements/me/favoritos")
                 .header("Authorization", "Bearer " + tokenDe(email)))
-            .andExpect(jsonPath("$[0].title").exists())
-            .andExpect(jsonPath("$[0].city").value("Recife"))
-            .andExpect(jsonPath("$[0].price").value(450000))
-            .andExpect(jsonPath("$[0].image").exists());
+            .andExpect(jsonPath("$.content[0].title").exists())
+            .andExpect(jsonPath("$.content[0].city").value("Recife"))
+            .andExpect(jsonPath("$.content[0].price").value(450000))
+            .andExpect(jsonPath("$.content[0].image").exists());
     }
 
     // ---------- C5 ----------
@@ -150,7 +150,7 @@ class FavoritosEHistoricoSpecTest extends PostgresIntegrationTest {
         mockMvc.perform(get("/api/v1/announcements/me/favoritos")
                 .header("Authorization", "Bearer " + tokenDe(email)))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$").isEmpty());
+            .andExpect(jsonPath("$.content").isEmpty());
     }
 
     // ---------- C6 ----------
@@ -252,8 +252,8 @@ class FavoritosEHistoricoSpecTest extends PostgresIntegrationTest {
         mockMvc.perform(get("/api/v1/announcements/me/historico")
                 .header("Authorization", "Bearer " + tokenDe(email)))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$[0].id").value(segundo))
-            .andExpect(jsonPath("$[1].id").value(primeiro));
+            .andExpect(jsonPath("$.content[0].id").value(segundo))
+            .andExpect(jsonPath("$.content[1].id").value(primeiro));
     }
 
     // ---------- C14 ----------

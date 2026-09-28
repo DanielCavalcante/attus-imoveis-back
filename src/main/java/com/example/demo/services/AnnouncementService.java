@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
@@ -39,8 +41,28 @@ public class AnnouncementService {
     private int limiteMensalPf;
 
     @Transactional(readOnly = true)
-    public List<AnnouncementListDTO> findAll() {
-        return repository.findAll().stream().map(AnnouncementListDTO::fromEntity).toList();
+    public Page<AnnouncementListDTO> findAll(String termo, Pageable pageable) {
+        String normalizado = normalizar(termo);
+
+        // Termo ausente, vazio ou so espaco significa "sem filtro", nao "nada
+        // encontrado": quem abre a listagem sem digitar quer ver o acervo.
+        Page<Announcement> pagina = normalizado.isEmpty()
+            ? repository.findAll(pageable)
+            : repository.buscar(normalizado, pageable);
+
+        return pagina.map(AnnouncementListDTO::fromEntity);
+    }
+
+    /** Mesma normalizacao da coluna: minuscula e sem acento. */
+    private String normalizar(String termo) {
+        if (termo == null) {
+            return "";
+        }
+
+        return java.text.Normalizer
+            .normalize(termo.trim(), java.text.Normalizer.Form.NFD)
+            .replaceAll("[̀-ͯ]", "")
+            .toLowerCase();
     }
 
     @Transactional
@@ -109,9 +131,8 @@ public class AnnouncementService {
     }
 
     @Transactional(readOnly = true)
-    public List<AnnouncementListDTO> findByUser(String email) {
-        List<Announcement> announcements = repository.findByUserEmail(email);
-        return announcements.stream().map(AnnouncementListDTO::fromEntity).toList();
+    public Page<AnnouncementListDTO> findByUser(String email, Pageable pageable) {
+        return repository.findByUserEmail(email, pageable).map(AnnouncementListDTO::fromEntity);
     }
 
     @Transactional(readOnly = true)

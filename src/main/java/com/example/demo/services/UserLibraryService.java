@@ -1,7 +1,9 @@
 package com.example.demo.services;
 
 import java.time.LocalDateTime;
-import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -54,11 +56,9 @@ public class UserLibraryService {
     }
 
     @Transactional(readOnly = true)
-    public List<AnnouncementListDTO> favorites(String email) {
-        return favoriteRepository.findAnnouncementsByUserEmail(email)
-            .stream()
-            .map(AnnouncementListDTO::fromEntity)
-            .toList();
+    public Page<AnnouncementListDTO> favorites(String email, Pageable pageable) {
+        return favoriteRepository.findAnnouncementsByUserEmail(email, pageable)
+            .map(AnnouncementListDTO::fromEntity);
     }
 
     /**
@@ -90,11 +90,9 @@ public class UserLibraryService {
     }
 
     @Transactional(readOnly = true)
-    public List<AnnouncementListDTO> history(String email) {
-        return viewRepository.findAnnouncementsByUserEmail(email)
-            .stream()
-            .map(AnnouncementListDTO::fromEntity)
-            .toList();
+    public Page<AnnouncementListDTO> history(String email, Pageable pageable) {
+        return viewRepository.findAnnouncementsByUserEmail(email, pageable)
+            .map(AnnouncementListDTO::fromEntity);
     }
 
     private User requireUser(String email) {
