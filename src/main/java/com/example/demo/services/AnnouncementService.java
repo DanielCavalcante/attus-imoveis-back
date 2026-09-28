@@ -1,14 +1,20 @@
 package com.example.demo.services;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
 import com.example.demo.dtos.AnnouncementCreateDTO;
 import com.example.demo.dtos.AnnouncementDetailDTO;
 import com.example.demo.dtos.AnnouncementListDTO;
+import com.example.demo.dtos.AnnouncementQuotaDTO;
 import com.example.demo.dtos.AnnouncementUpdateDTO;
+import com.example.demo.enums.AccountType;
+import com.example.demo.exceptions.custom.ConflictException;
 import com.example.demo.exceptions.custom.ResourceNotFoundException;
 import com.example.demo.mappers.AnnouncementMapper;
 import com.example.demo.model.Announcement;
@@ -28,6 +34,10 @@ public class AnnouncementService {
     private final UserRepository userRepository;
     private final AnnouncementMapper mapper;
 
+    /** Regra de negocio em propriedade: mudar o limite nao pode exigir deploy de codigo. */
+    @Value("${attus.quota.pf.mensal:3}")
+    private int limiteMensalPf;
+
     @Transactional(readOnly = true)
     public List<AnnouncementListDTO> findAll() {
         return repository.findAll().stream().map(AnnouncementListDTO::fromEntity).toList();
@@ -36,12 +46,56 @@ public class AnnouncementService {
     @Transactional
     public AnnouncementDetailDTO create(AnnouncementCreateDTO dto, String email) {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
+
+        // Antes de qualquer gravacao: recusa por quota nao pode deixar rastro.
+        ensureQuota(user);
+
         Announcement entity = mapper.toEntity(dto);
         entity.setUser(user);
 
         Announcement saved = repository.save(entity);
 
         return mapper.toDetailDTO(saved);
+    }
+
+    @Transactional(readOnly = true)
+    public AnnouncementQuotaDTO quotaOf(String email) {
+        User user = userRepository.findByEmail(email)
+            .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
+
+        if (!hasQuota(user)) {
+            return AnnouncementQuotaDTO.semLimite();
+        }
+
+        return AnnouncementQuotaDTO.de(limiteMensalPf, usedThisMonth(email));
+    }
+
+    /** So a pessoa fisica tem quota gratuita; PJ publica conforme plano. */
+    private boolean hasQuota(User user) {
+        return user.getAccountType() == AccountType.PF;
+    }
+
+    private void ensureQuota(User user) {
+        if (!hasQuota(user)) {
+            return;
+        }
+
+        long usados = usedThisMonth(user.getEmail());
+
+        if (usados >= limiteMensalPf) {
+            // 409 e nao 403: o pedido e legitimo e a conta pode publicar,
+            // o que falta e saldo do mes.
+            throw new ConflictException(
+                "Limite de %d anuncios no mes atingido".formatted(limiteMensalPf)
+            );
+        }
+    }
+
+    /** Mes civil, nao janela de trinta dias: "tres por mes" e o que foi combinado. */
+    private long usedThisMonth(String email) {
+        LocalDateTime inicioDoMes = LocalDate.now().withDayOfMonth(1).atStartOfDay();
+
+        return repository.countByUserEmailAndCreatedAtGreaterThanEqual(email, inicioDoMes);
     }
 
     @SuppressWarnings("null")

@@ -11,8 +11,13 @@ import org.springframework.security.core.userdetails.UserDetails;
 import com.example.demo.dtos.AnnouncementCreateDTO;
 import com.example.demo.dtos.AnnouncementDetailDTO;
 import com.example.demo.dtos.AnnouncementListDTO;
+import com.example.demo.dtos.AnnouncementQuotaDTO;
 import com.example.demo.dtos.AnnouncementUpdateDTO;
+import com.example.demo.dtos.SupportRequestCreateDTO;
+import com.example.demo.dtos.SupportRequestDTO;
 import com.example.demo.services.AnnouncementService;
+import com.example.demo.services.SupportRequestService;
+import com.example.demo.services.UserLibraryService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,6 +31,8 @@ import lombok.RequiredArgsConstructor;
 public class AnnouncementController {
 
     private final AnnouncementService announcementService;
+    private final SupportRequestService supportRequestService;
+    private final UserLibraryService userLibraryService;
 
     @Operation(summary = "Buscar anúncios")
     @GetMapping
@@ -34,8 +41,57 @@ public class AnnouncementController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<AnnouncementDetailDTO> findOne(@PathVariable @NonNull Long id) {
-        return ResponseEntity.ok(announcementService.findOne(id));
+    public ResponseEntity<AnnouncementDetailDTO> findOne(
+        @PathVariable @NonNull Long id,
+        @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        AnnouncementDetailDTO detail = announcementService.findOne(id);
+
+        // Rota publica: sem sessao o principal chega nulo e nada e gravado.
+        userLibraryService.registerView(
+            id,
+            userDetails == null ? null : userDetails.getUsername()
+        );
+
+        return ResponseEntity.ok(detail);
+    }
+
+    @Operation(summary = "Favorita este anuncio")
+    @PostMapping("/{id}/favorito")
+    public ResponseEntity<Void> favorite(
+        @PathVariable Long id,
+        @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        userLibraryService.favorite(id, userDetails.getUsername());
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Remove este anuncio dos favoritos")
+    @DeleteMapping("/{id}/favorito")
+    public ResponseEntity<Void> unfavorite(
+        @PathVariable Long id,
+        @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        userLibraryService.unfavorite(id, userDetails.getUsername());
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Anuncios favoritados pela conta")
+    @GetMapping("/me/favoritos")
+    public ResponseEntity<List<AnnouncementListDTO>> favorites(
+        @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        return ResponseEntity.ok(userLibraryService.favorites(userDetails.getUsername()));
+    }
+
+    @Operation(summary = "Anuncios vistos pela conta, do mais recente ao mais antigo")
+    @GetMapping("/me/historico")
+    public ResponseEntity<List<AnnouncementListDTO>> history(
+        @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        return ResponseEntity.ok(userLibraryService.history(userDetails.getUsername()));
     }
 
     @Operation(summary = "Criar anúncio")
@@ -60,6 +116,35 @@ public class AnnouncementController {
     // public void delete(@PathVariable Long id) {
     //     service.delete(id);
     // }
+
+    @Operation(summary = "Saldo de anuncios do mes da conta autenticada")
+    @GetMapping("/me/quota")
+    public ResponseEntity<AnnouncementQuotaDTO> myQuota(@AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(announcementService.quotaOf(userDetails.getUsername()));
+    }
+
+    @Operation(summary = "Pede apoio da equipe para vender este anuncio")
+    @PostMapping("/{id}/apoio")
+    public ResponseEntity<SupportRequestDTO> openSupport(
+        @PathVariable Long id,
+        @RequestBody(required = false) @Valid SupportRequestCreateDTO dto,
+        @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        return ResponseEntity.ok(
+            supportRequestService.open(id, dto, userDetails.getUsername())
+        );
+    }
+
+    @Operation(summary = "Pedido de apoio vigente deste anuncio")
+    @GetMapping("/{id}/apoio")
+    public ResponseEntity<SupportRequestDTO> findSupport(
+        @PathVariable Long id,
+        @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        return ResponseEntity.ok(
+            supportRequestService.findOpen(id, userDetails.getUsername())
+        );
+    }
 
     @GetMapping("/me")
     public ResponseEntity<List<AnnouncementListDTO>> myAnnouncements(@AuthenticationPrincipal UserDetails userDetails) {
