@@ -65,6 +65,18 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- MIGRACAO DE SCHEMA -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+
+        <!-- Separado do core desde o Flyway 10; sem ele o Postgres 16 nao e reconhecido. -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+        </dependency>
+
         <!-- POSTGRES -->
         <dependency>
             <groupId>org.postgresql</groupId>
