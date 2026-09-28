@@ -2,6 +2,10 @@ package com.example.demo.controllers;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -53,8 +57,10 @@ public class BackofficeController {
 
     @Operation(summary = "Fila de empresas aguardando analise")
     @GetMapping("/companies")
-    public ResponseEntity<List<BackofficeCompanyListDTO>> pendingAnalysis() {
-        return ResponseEntity.ok(companyService.findPendingAnalysis());
+    public ResponseEntity<Page<BackofficeCompanyListDTO>> pendingAnalysis(
+        @PageableDefault(size = 20, sort = "id", direction = Sort.Direction.ASC) Pageable pageable
+    ) {
+        return ResponseEntity.ok(companyService.findPendingAnalysis(pageable));
     }
 
     @Operation(summary = "Aprova a empresa")
@@ -80,8 +86,10 @@ public class BackofficeController {
 
     @Operation(summary = "Pedidos de apoio de venda em aberto")
     @GetMapping("/support")
-    public ResponseEntity<List<BackofficeSupportListDTO>> openSupport() {
-        return ResponseEntity.ok(supportRequestService.findOpenRequests());
+    public ResponseEntity<Page<BackofficeSupportListDTO>> openSupport(
+        @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.ASC) Pageable pageable
+    ) {
+        return ResponseEntity.ok(supportRequestService.findOpenRequests(pageable));
     }
 
     @Operation(summary = "Conclui um pedido de apoio")

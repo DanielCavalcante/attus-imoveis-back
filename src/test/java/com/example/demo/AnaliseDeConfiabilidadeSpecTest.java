@@ -138,7 +138,7 @@ class AnaliseDeConfiabilidadeSpecTest extends PostgresIntegrationTest {
         mockMvc.perform(get("/api/v1/backoffice/companies")
                 .header("Authorization", "Bearer " + tokenInterno()))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$[0].analysisStatus").value("EM_ANALISE"));
+            .andExpect(jsonPath("$.content[0].analysisStatus").value("EM_ANALISE"));
     }
 
     // ---------- C8 ----------
@@ -151,7 +151,7 @@ class AnaliseDeConfiabilidadeSpecTest extends PostgresIntegrationTest {
         mockMvc.perform(get("/api/v1/backoffice/companies")
                 .header("Authorization", "Bearer " + tokenInterno()))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$").isEmpty());
+            .andExpect(jsonPath("$.content").isEmpty());
     }
 
     // ---------- C9 ----------

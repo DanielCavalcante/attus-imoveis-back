@@ -48,9 +48,9 @@ public class AccountBootstrap implements ApplicationRunner {
 
     /** Conta gravada antes desta spec nao tem tipo: era anterior a distincao PF/PJ. */
     public void backfillExistingAccounts() {
-        List<User> pending = repository.findAll().stream()
-            .filter(user -> user.getAccountType() == null)
-            .toList();
+        // Consulta em vez de trazer a tabela e filtrar em Java: isto roda a cada
+        // boot, inclusive em cada contexto Spring levantado pela suite.
+        List<User> pending = repository.findAllByAccountTypeIsNull();
 
         pending.forEach(user -> {
             user.setAccountType(AccountType.PF);

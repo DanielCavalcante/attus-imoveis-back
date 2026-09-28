@@ -21,7 +21,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 @Entity
@@ -69,13 +68,6 @@ public class User implements UserDetails {
      */
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Announcement> announcements = new ArrayList<>();
-
-    /**
-     * Mapeado dos dois lados so por causa do ciclo de vida: sem o cascade, apagar
-     * uma conta PJ esbarra na chave estrangeira de companies.
-     */
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Company company;
 
     public Long getId() {
         return id;
@@ -155,14 +147,6 @@ public class User implements UserDetails {
 
     public void setCnpj(String cnpj) {
         this.cnpj = cnpj;
-    }
-
-    public Company getCompany() {
-        return company;
-    }
-
-    public void setCompany(Company company) {
-        this.company = company;
     }
 
     public List<Announcement> getAnnouncements() {

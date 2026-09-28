@@ -1,7 +1,9 @@
 package com.example.demo.services;
 
 import java.time.LocalDateTime;
-import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -77,11 +79,9 @@ public class CompanyService {
     }
 
     @Transactional(readOnly = true)
-    public List<BackofficeCompanyListDTO> findPendingAnalysis() {
-        return repository.findAllByAnalysisStatus(AnalysisStatus.EM_ANALISE)
-            .stream()
-            .map(this::toListDTO)
-            .toList();
+    public Page<BackofficeCompanyListDTO> findPendingAnalysis(Pageable pageable) {
+        return repository.findAllByAnalysisStatus(AnalysisStatus.EM_ANALISE, pageable)
+            .map(this::toListDTO);
     }
 
     @Transactional

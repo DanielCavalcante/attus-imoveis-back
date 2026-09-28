@@ -1,7 +1,9 @@
 package com.example.demo.services;
 
 import java.time.LocalDateTime;
-import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -58,11 +60,9 @@ public class SupportRequestService {
     }
 
     @Transactional(readOnly = true)
-    public List<BackofficeSupportListDTO> findOpenRequests() {
-        return repository.findAllByStatus(SupportStatus.ABERTO)
-            .stream()
-            .map(BackofficeSupportListDTO::fromEntity)
-            .toList();
+    public Page<BackofficeSupportListDTO> findOpenRequests(Pageable pageable) {
+        return repository.findAllByStatus(SupportStatus.ABERTO, pageable)
+            .map(BackofficeSupportListDTO::fromEntity);
     }
 
     @Transactional

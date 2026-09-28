@@ -208,8 +208,8 @@ class ApoioDeVendaSpecTest extends PostgresIntegrationTest {
         mockMvc.perform(get("/api/v1/backoffice/support")
                 .header("Authorization", "Bearer " + tokenInterno()))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$[0].announcementId").value(anuncio))
-            .andExpect(jsonPath("$[0].solicitanteEmail").value(email));
+            .andExpect(jsonPath("$.content[0].announcementId").value(anuncio))
+            .andExpect(jsonPath("$.content[0].solicitanteEmail").value(email));
     }
 
     // ---------- C12 ----------
@@ -226,7 +226,7 @@ class ApoioDeVendaSpecTest extends PostgresIntegrationTest {
         mockMvc.perform(get("/api/v1/backoffice/support")
                 .header("Authorization", "Bearer " + tokenInterno()))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$").isEmpty());
+            .andExpect(jsonPath("$.content").isEmpty());
     }
 
     // ---------- C13 ----------
