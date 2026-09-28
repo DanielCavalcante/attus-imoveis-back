@@ -6,22 +6,24 @@ A equipe interna cria e ajusta os pacotes vendidos à pessoa jurídica pelo pain
 ## Depende de
 01-contas-tipadas
 
+> **Aprovada no gate humano em 2026-09-28.** Todos os critérios aceitos.
+
 ## Critérios
-- [ ] **C1** `seguranca` — `POST /api/v1/backoffice/plans` com papel diferente de `INTERNO` responde 403.
-- [ ] **C2** `contrato-api` — `POST /api/v1/backoffice/plans` com papel `INTERNO` responde 201.
-- [ ] **C3** `persistencia` — O plano criado fica gravado com nome, preço mensal e limite de anúncios.
-- [ ] **C4** `contrato-api` — Criar plano sem nome é recusado com 400 e a mensagem nomeia o campo.
-- [ ] **C5** `contrato-api` — Criar plano com preço mensal negativo é recusado com 400.
-- [ ] **C6** `persistencia` — Criar plano com nome já existente é recusado com 409.
-- [ ] **C7** `dominio` — Plano criado nasce ativo.
-- [ ] **C8** `persistencia` — `PUT /api/v1/backoffice/plans/{id}` grava o novo preço mensal.
-- [ ] **C9** `seguranca` — `PUT /api/v1/backoffice/plans/{id}` com papel diferente de `INTERNO` responde 403.
-- [ ] **C10** `dominio` — Desativar um plano deixa-o inativo.
-- [ ] **C11** `persistencia` — Plano desativado continua existindo no banco.
-- [ ] **C12** `contrato-api` — `GET /api/v1/backoffice/plans` lista também os planos inativos.
-- [ ] **C13** `contrato-api` — `GET /api/v1/plans` não lista plano inativo.
-- [ ] **C14** `contrato-api` — `GET /api/v1/plans` sem autenticação responde 200.
-- [ ] **C15** `contrato-api` — Plano com limite de anúncios nulo é devolvido como ilimitado.
+- [x] **C1** `seguranca` — `POST /api/v1/backoffice/plans` com papel diferente de `INTERNO` responde 403.
+- [x] **C2** `contrato-api` — `POST /api/v1/backoffice/plans` com papel `INTERNO` responde 201.
+- [x] **C3** `persistencia` — O plano criado fica gravado com nome, preço mensal e limite de anúncios.
+- [x] **C4** `contrato-api` — Criar plano sem nome é recusado com 400 e a mensagem nomeia o campo.
+- [x] **C5** `contrato-api` — Criar plano com preço mensal negativo é recusado com 400.
+- [x] **C6** `persistencia` — Criar plano com nome já existente é recusado com 409.
+- [x] **C7** `dominio` — Plano criado nasce ativo.
+- [x] **C8** `persistencia` — `PUT /api/v1/backoffice/plans/{id}` grava o novo preço mensal.
+- [x] **C9** `seguranca` — `PUT /api/v1/backoffice/plans/{id}` com papel diferente de `INTERNO` responde 403.
+- [x] **C10** `dominio` — Desativar um plano deixa-o inativo.
+- [x] **C11** `persistencia` — Plano desativado continua existindo no banco.
+- [x] **C12** `contrato-api` — `GET /api/v1/backoffice/plans` lista também os planos inativos.
+- [x] **C13** `contrato-api` — `GET /api/v1/plans` não lista plano inativo.
+- [x] **C14** `contrato-api` — `GET /api/v1/plans` sem autenticação responde 200.
+- [x] **C15** `contrato-api` — Plano com limite de anúncios nulo é devolvido como ilimitado.
 
 ## Contrato técnico
 - Entidade `Plan` em tabela própria, com `nome` único, `descricao`, `precoMensal`, `limiteAnuncios` e `ativo`.

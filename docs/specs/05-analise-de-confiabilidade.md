@@ -6,22 +6,24 @@ A imobiliária envia o dossiê para análise e a equipe interna aprova ou reprov
 ## Depende de
 02-dossie-da-empresa
 
+> **Aprovada no gate humano em 2026-09-28.** Todos os critérios aceitos.
+
 ## Critérios
-- [ ] **C1** `dominio` — Empresa recém-criada tem análise no estado `NAO_ENVIADO`.
-- [ ] **C2** `dominio` — Envio para análise de empresa com dossiê incompleto é recusado com 400.
-- [ ] **C3** `dominio` — Envio para análise de empresa com dossiê completo deixa a análise em `EM_ANALISE`.
-- [ ] **C4** `seguranca` — `POST /api/v1/companies/me/analise` sem autenticação responde 403.
-- [ ] **C5** `contrato-api` — `GET /api/v1/companies/me` devolve o estado da análise.
-- [ ] **C6** `seguranca` — `GET /api/v1/backoffice/companies` com papel diferente de `INTERNO` responde 403.
-- [ ] **C7** `contrato-api` — `GET /api/v1/backoffice/companies` lista empresa em `EM_ANALISE`.
-- [ ] **C8** `contrato-api` — `GET /api/v1/backoffice/companies` não lista empresa em `NAO_ENVIADO`.
-- [ ] **C9** `dominio` — Aprovação por conta interna deixa a análise em `APROVADA`.
-- [ ] **C10** `dominio` — Reprovação por conta interna deixa a análise em `REPROVADA`.
-- [ ] **C11** `contrato-api` — Reprovação sem motivo é recusada com 400 e a mensagem nomeia o campo.
-- [ ] **C12** `persistencia` — O motivo informado na reprovação fica gravado na empresa.
-- [ ] **C13** `persistencia` — A aprovação grava o e-mail de quem aprovou e o instante da decisão.
-- [ ] **C14** `seguranca` — Aprovar com papel diferente de `INTERNO` responde 403.
-- [ ] **C15** `dominio` — Empresa já `APROVADA` não pode ser reenviada para análise.
+- [x] **C1** `dominio` — Empresa recém-criada tem análise no estado `NAO_ENVIADO`.
+- [x] **C2** `dominio` — Envio para análise de empresa com dossiê incompleto é recusado com 400.
+- [x] **C3** `dominio` — Envio para análise de empresa com dossiê completo deixa a análise em `EM_ANALISE`.
+- [x] **C4** `seguranca` — `POST /api/v1/companies/me/analise` sem autenticação responde 403.
+- [x] **C5** `contrato-api` — `GET /api/v1/companies/me` devolve o estado da análise.
+- [x] **C6** `seguranca` — `GET /api/v1/backoffice/companies` com papel diferente de `INTERNO` responde 403.
+- [x] **C7** `contrato-api` — `GET /api/v1/backoffice/companies` lista empresa em `EM_ANALISE`.
+- [x] **C8** `contrato-api` — `GET /api/v1/backoffice/companies` não lista empresa em `NAO_ENVIADO`.
+- [x] **C9** `dominio` — Aprovação por conta interna deixa a análise em `APROVADA`.
+- [x] **C10** `dominio` — Reprovação por conta interna deixa a análise em `REPROVADA`.
+- [x] **C11** `contrato-api` — Reprovação sem motivo é recusada com 400 e a mensagem nomeia o campo.
+- [x] **C12** `persistencia` — O motivo informado na reprovação fica gravado na empresa.
+- [x] **C13** `persistencia` — A aprovação grava o e-mail de quem aprovou e o instante da decisão.
+- [x] **C14** `seguranca` — Aprovar com papel diferente de `INTERNO` responde 403.
+- [x] **C15** `dominio` — Empresa já `APROVADA` não pode ser reenviada para análise.
 
 ## Contrato técnico
 - `enums/AnalysisStatus`: `NAO_ENVIADO`, `EM_ANALISE`, `APROVADA`, `REPROVADA`. Persistido como `EnumType.STRING`.

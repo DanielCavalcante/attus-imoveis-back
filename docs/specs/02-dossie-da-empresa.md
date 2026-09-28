@@ -6,22 +6,24 @@ A pessoa jurídica cria a conta com CNPJ e contato, e completa os dados da empre
 ## Depende de
 01-contas-tipadas
 
+> **Aprovada no gate humano em 2026-09-28.** Todos os critérios aceitos.
+
 ## Critérios
-- [ ] **C1** `dominio` — Cadastro PJ com CNPJ e sem os demais dados da empresa é aceito com 201.
-- [ ] **C2** `persistencia` — Conta criada com tipo `PJ` passa a ter um registro de empresa associado.
-- [ ] **C3** `dominio` — Conta criada com tipo `PF` não gera registro de empresa.
-- [ ] **C4** `dominio` — Empresa recém-criada tem o dossiê marcado como incompleto.
-- [ ] **C5** `contrato-api` — `GET /api/v1/companies/me` com JWT de conta PJ devolve 200 com o CNPJ da conta.
-- [ ] **C6** `seguranca` — `GET /api/v1/companies/me` sem cabeçalho de autorização responde 403.
-- [ ] **C7** `contrato-api` — `GET /api/v1/companies/me` com JWT de conta PF responde 404.
-- [ ] **C8** `contrato-api` — `PUT /api/v1/companies/me` com dossiê completo responde 200.
-- [ ] **C9** `persistencia` — Após o `PUT` com dossiê completo, razão social, nome fantasia, CRECI, responsável e endereço estão gravados.
-- [ ] **C10** `dominio` — Após o `PUT` com dossiê completo, a empresa fica marcada como completa.
-- [ ] **C11** `contrato-api` — `PUT /api/v1/companies/me` sem razão social é recusado com 400 e a mensagem nomeia o campo.
-- [ ] **C12** `contrato-api` — `PUT /api/v1/companies/me` sem número de CRECI é recusado com 400 e a mensagem nomeia o campo.
-- [ ] **C13** `persistencia` — `PUT` com par CRECI número+UF já usado por outra empresa é recusado com 409.
-- [ ] **C14** `seguranca` — `PUT /api/v1/companies/me` altera apenas a empresa da conta autenticada, deixando a de outra conta intacta.
-- [ ] **C15** `persistencia` — CNPJ com letras é gravado e relido sem perda de caractere.
+- [x] **C1** `dominio` — Cadastro PJ com CNPJ e sem os demais dados da empresa é aceito com 201.
+- [x] **C2** `persistencia` — Conta criada com tipo `PJ` passa a ter um registro de empresa associado.
+- [x] **C3** `dominio` — Conta criada com tipo `PF` não gera registro de empresa.
+- [x] **C4** `dominio` — Empresa recém-criada tem o dossiê marcado como incompleto.
+- [x] **C5** `contrato-api` — `GET /api/v1/companies/me` com JWT de conta PJ devolve 200 com o CNPJ da conta.
+- [x] **C6** `seguranca` — `GET /api/v1/companies/me` sem cabeçalho de autorização responde 403.
+- [x] **C7** `contrato-api` — `GET /api/v1/companies/me` com JWT de conta PF responde 404.
+- [x] **C8** `contrato-api` — `PUT /api/v1/companies/me` com dossiê completo responde 200.
+- [x] **C9** `persistencia` — Após o `PUT` com dossiê completo, razão social, nome fantasia, CRECI, responsável e endereço estão gravados.
+- [x] **C10** `dominio` — Após o `PUT` com dossiê completo, a empresa fica marcada como completa.
+- [x] **C11** `contrato-api` — `PUT /api/v1/companies/me` sem razão social é recusado com 400 e a mensagem nomeia o campo.
+- [x] **C12** `contrato-api` — `PUT /api/v1/companies/me` sem número de CRECI é recusado com 400 e a mensagem nomeia o campo.
+- [x] **C13** `persistencia` — `PUT` com par CRECI número+UF já usado por outra empresa é recusado com 409.
+- [x] **C14** `seguranca` — `PUT /api/v1/companies/me` altera apenas a empresa da conta autenticada, deixando a de outra conta intacta.
+- [x] **C15** `persistencia` — CNPJ com letras é gravado e relido sem perda de caractere.
 
 ## Contrato técnico
 - Entidade `Company` em tabela própria, `@OneToOne` com `User`. O CNPJ continua em `User`, onde a spec 01 o tornou único: ele identifica a conta no cadastro, antes de existir dossiê.

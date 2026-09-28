@@ -6,22 +6,24 @@ Quem se cadastra passa a declarar se é pessoa física ou jurídica, e a conta c
 ## Depende de
 nenhuma
 
+> **Aprovada no gate humano em 2026-09-28.** Todos os critérios aceitos.
+
 ## Critérios
-- [ ] **C1** `contrato-api` — `POST /api/v1/users` sem o campo de tipo de conta é recusado com 400 e a mensagem nomeia o campo.
-- [ ] **C2** `contrato-api` — `POST /api/v1/users` com tipo de conta fora do conjunto aceito é recusado com 400.
-- [ ] **C3** `dominio` — Cadastro declarado como pessoa física persiste a conta com tipo `PF`.
-- [ ] **C4** `dominio` — Cadastro declarado como pessoa jurídica persiste a conta com tipo `PJ`.
-- [ ] **C5** `dominio` — Conta criada com tipo `PF` nasce com status `ATIVO`.
-- [ ] **C6** `dominio` — Conta criada com tipo `PJ` nasce com status `ATIVO`.
-- [ ] **C7** `dominio` — Cadastro de pessoa jurídica sem CNPJ é recusado com 400.
-- [ ] **C8** `persistencia` — Cadastro com CNPJ já existente é recusado com 409.
-- [ ] **C9** `persistencia` — Após a carga, toda conta que já existia no banco tem status `ATIVO`.
-- [ ] **C10** `seguranca` — O JWT emitido carrega o tipo de conta numa claim.
-- [ ] **C11** `seguranca` — O JWT emitido carrega o papel numa claim.
-- [ ] **C12** `seguranca` — Requisição a rota sob `/api/v1/backoffice/**` com JWT de papel diferente de `INTERNO` responde 403.
-- [ ] **C13** `seguranca` — Requisição a rota sob `/api/v1/backoffice/**` com JWT de papel `INTERNO` não responde 403.
-- [ ] **C14** `seguranca` — Nenhum corpo enviado a `POST /api/v1/users` produz conta com papel `INTERNO`.
-- [ ] **C15** `contrato-api` — `GET /api/v1/announcements` sem autenticação continua respondendo 200.
+- [x] **C1** `contrato-api` — `POST /api/v1/users` sem o campo de tipo de conta é recusado com 400 e a mensagem nomeia o campo.
+- [x] **C2** `contrato-api` — `POST /api/v1/users` com tipo de conta fora do conjunto aceito é recusado com 400.
+- [x] **C3** `dominio` — Cadastro declarado como pessoa física persiste a conta com tipo `PF`.
+- [x] **C4** `dominio` — Cadastro declarado como pessoa jurídica persiste a conta com tipo `PJ`.
+- [x] **C5** `dominio` — Conta criada com tipo `PF` nasce com status `ATIVO`.
+- [x] **C6** `dominio` — Conta criada com tipo `PJ` nasce com status `ATIVO`.
+- [x] **C7** `dominio` — Cadastro de pessoa jurídica sem CNPJ é recusado com 400.
+- [x] **C8** `persistencia` — Cadastro com CNPJ já existente é recusado com 409.
+- [x] **C9** `persistencia` — Após a carga, toda conta que já existia no banco tem status `ATIVO`.
+- [x] **C10** `seguranca` — O JWT emitido carrega o tipo de conta numa claim.
+- [x] **C11** `seguranca` — O JWT emitido carrega o papel numa claim.
+- [x] **C12** `seguranca` — Requisição a rota sob `/api/v1/backoffice/**` com JWT de papel diferente de `INTERNO` responde 403.
+- [x] **C13** `seguranca` — Requisição a rota sob `/api/v1/backoffice/**` com JWT de papel `INTERNO` não responde 403.
+- [x] **C14** `seguranca` — Nenhum corpo enviado a `POST /api/v1/users` produz conta com papel `INTERNO`.
+- [x] **C15** `contrato-api` — `GET /api/v1/announcements` sem autenticação continua respondendo 200.
 
 ## Contrato técnico
 - O conjunto de tipos é `PF`, `PJ`, `INTERNO`. Não existe tipo "usuário final": quem só navega é uma `PF` que ainda não anunciou.

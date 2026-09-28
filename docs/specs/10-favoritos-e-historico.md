@@ -6,22 +6,24 @@ Quem navega guarda os imóveis que interessam e reencontra o que já viu, de qua
 ## Depende de
 01-contas-tipadas
 
+> **Aprovada no gate humano em 2026-09-28.** Todos os critérios aceitos.
+
 ## Critérios
-- [ ] **C1** `dominio` — Favoritar um anúncio cria o favorito para a conta autenticada.
-- [ ] **C2** `dominio` — Favoritar o mesmo anúncio duas vezes não cria um segundo favorito.
-- [ ] **C3** `dominio` — Desfavoritar remove o favorito da conta.
-- [ ] **C4** `contrato-api` — `GET /api/v1/announcements/me/favoritos` lista os anúncios favoritados da conta.
-- [ ] **C5** `dominio` — Favorito de outra conta não aparece na lista desta.
-- [ ] **C6** `seguranca` — Favoritar sem autenticação responde 403.
-- [ ] **C7** `contrato-api` — Favoritar anúncio inexistente responde 404.
-- [ ] **C8** `contrato-api` — A listagem de favoritos traz título, cidade, preço e imagem de cada anúncio.
-- [ ] **C9** `dominio` — Visitar o detalhe de um anúncio com sessão registra a visualização.
-- [ ] **C10** `dominio` — Visitar o mesmo anúncio de novo não cria uma segunda linha de histórico.
-- [ ] **C11** `dominio` — Visitar o mesmo anúncio de novo atualiza o instante da visita.
-- [ ] **C12** `dominio` — Visita sem sessão não registra histórico.
-- [ ] **C13** `contrato-api` — `GET /api/v1/announcements/me/historico` lista do mais recente para o mais antigo.
-- [ ] **C14** `seguranca` — `GET /api/v1/announcements/me/historico` sem autenticação responde 403.
-- [ ] **C15** `persistencia` — Remover um anúncio remove os favoritos e o histórico dele.
+- [x] **C1** `dominio` — Favoritar um anúncio cria o favorito para a conta autenticada.
+- [x] **C2** `dominio` — Favoritar o mesmo anúncio duas vezes não cria um segundo favorito.
+- [x] **C3** `dominio` — Desfavoritar remove o favorito da conta.
+- [x] **C4** `contrato-api` — `GET /api/v1/announcements/me/favoritos` lista os anúncios favoritados da conta.
+- [x] **C5** `dominio` — Favorito de outra conta não aparece na lista desta.
+- [x] **C6** `seguranca` — Favoritar sem autenticação responde 403.
+- [x] **C7** `contrato-api` — Favoritar anúncio inexistente responde 404.
+- [x] **C8** `contrato-api` — A listagem de favoritos traz título, cidade, preço e imagem de cada anúncio.
+- [x] **C9** `dominio` — Visitar o detalhe de um anúncio com sessão registra a visualização.
+- [x] **C10** `dominio` — Visitar o mesmo anúncio de novo não cria uma segunda linha de histórico.
+- [x] **C11** `dominio` — Visitar o mesmo anúncio de novo atualiza o instante da visita.
+- [x] **C12** `dominio` — Visita sem sessão não registra histórico.
+- [x] **C13** `contrato-api` — `GET /api/v1/announcements/me/historico` lista do mais recente para o mais antigo.
+- [x] **C14** `seguranca` — `GET /api/v1/announcements/me/historico` sem autenticação responde 403.
+- [x] **C15** `persistencia` — Remover um anúncio remove os favoritos e o histórico dele.
 
 ## Contrato técnico
 - Duas entidades: `Favorite` e `AnnouncementView`, ambas com par único `(user, announcement)`.

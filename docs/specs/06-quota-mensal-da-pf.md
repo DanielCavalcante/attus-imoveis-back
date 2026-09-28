@@ -6,21 +6,23 @@ A pessoa física publica até três anúncios por mês sem pagar, e sabe quantos
 ## Depende de
 01-contas-tipadas
 
+> **Aprovada no gate humano em 2026-09-28.** Todos os critérios aceitos.
+
 ## Critérios
-- [ ] **C1** `dominio` — Conta `PF` sem anúncio no mês cria um anúncio com sucesso.
-- [ ] **C2** `dominio` — Conta `PF` com dois anúncios no mês cria o terceiro com sucesso.
-- [ ] **C3** `dominio` — Conta `PF` com três anúncios no mês é recusada ao criar o quarto.
-- [ ] **C4** `contrato-api` — A recusa por quota responde 409.
-- [ ] **C5** `persistencia` — Anúncio recusado por quota não é gravado.
-- [ ] **C6** `dominio` — Anúncio criado em mês anterior não conta para a quota do mês corrente.
-- [ ] **C7** `dominio` — Anúncio de outra conta não conta para a quota desta.
-- [ ] **C8** `dominio` — Conta `PJ` com três anúncios no mês cria o quarto com sucesso.
-- [ ] **C9** `dominio` — Com o limite configurado em 1, a conta `PF` é recusada ao criar o segundo anúncio.
-- [ ] **C10** `contrato-api` — `GET /api/v1/announcements/me/quota` devolve o limite vigente.
-- [ ] **C11** `contrato-api` — `GET /api/v1/announcements/me/quota` devolve quantos anúncios já foram usados no mês.
-- [ ] **C12** `contrato-api` — `GET /api/v1/announcements/me/quota` devolve quantos ainda restam.
-- [ ] **C13** `contrato-api` — `GET /api/v1/announcements/me/quota` para conta `PJ` indica que não há limite.
-- [ ] **C14** `seguranca` — `GET /api/v1/announcements/me/quota` sem autenticação responde 403.
+- [x] **C1** `dominio` — Conta `PF` sem anúncio no mês cria um anúncio com sucesso.
+- [x] **C2** `dominio` — Conta `PF` com dois anúncios no mês cria o terceiro com sucesso.
+- [x] **C3** `dominio` — Conta `PF` com três anúncios no mês é recusada ao criar o quarto.
+- [x] **C4** `contrato-api` — A recusa por quota responde 409.
+- [x] **C5** `persistencia` — Anúncio recusado por quota não é gravado.
+- [x] **C6** `dominio` — Anúncio criado em mês anterior não conta para a quota do mês corrente.
+- [x] **C7** `dominio` — Anúncio de outra conta não conta para a quota desta.
+- [x] **C8** `dominio` — Conta `PJ` com três anúncios no mês cria o quarto com sucesso.
+- [x] **C9** `dominio` — Com o limite configurado em 1, a conta `PF` é recusada ao criar o segundo anúncio.
+- [x] **C10** `contrato-api` — `GET /api/v1/announcements/me/quota` devolve o limite vigente.
+- [x] **C11** `contrato-api` — `GET /api/v1/announcements/me/quota` devolve quantos anúncios já foram usados no mês.
+- [x] **C12** `contrato-api` — `GET /api/v1/announcements/me/quota` devolve quantos ainda restam.
+- [x] **C13** `contrato-api` — `GET /api/v1/announcements/me/quota` para conta `PJ` indica que não há limite.
+- [x] **C14** `seguranca` — `GET /api/v1/announcements/me/quota` sem autenticação responde 403.
 
 ## Contrato técnico
 - O limite vem da propriedade `attus.quota.pf.mensal`, com padrão 3. Literal no código transformaria mudança de regra de negócio em deploy de código.

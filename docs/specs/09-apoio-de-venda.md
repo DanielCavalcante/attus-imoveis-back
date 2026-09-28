@@ -6,22 +6,24 @@ Quem anuncia pede ajuda da equipe para vender mais rápido, e o pedido cai na fi
 ## Depende de
 01-contas-tipadas
 
+> **Aprovada no gate humano em 2026-09-28.** Todos os critérios aceitos.
+
 ## Critérios
-- [ ] **C1** `dominio` — Dono do anúncio pede apoio e o pedido é criado.
-- [ ] **C2** `seguranca` — Conta que não é dona do anúncio recebe 403 ao pedir apoio para ele.
-- [ ] **C3** `seguranca` — Pedido de apoio sem autenticação responde 403.
-- [ ] **C4** `dominio` — Pedido de apoio nasce com status `ABERTO`.
-- [ ] **C5** `persistencia` — O pedido grava o anúncio e o solicitante.
-- [ ] **C6** `dominio` — Segundo pedido para um anúncio que já tem pedido aberto é recusado com 409.
-- [ ] **C7** `contrato-api` — Pedido de apoio para anúncio inexistente responde 404.
-- [ ] **C8** `contrato-api` — `GET /api/v1/announcements/{id}/apoio` devolve o pedido vigente para o dono.
-- [ ] **C9** `contrato-api` — `GET /api/v1/announcements/{id}/apoio` responde 404 quando não há pedido.
-- [ ] **C10** `seguranca` — `GET /api/v1/backoffice/support` com papel diferente de `INTERNO` responde 403.
-- [ ] **C11** `contrato-api` — `GET /api/v1/backoffice/support` lista pedido `ABERTO`.
-- [ ] **C12** `contrato-api` — `GET /api/v1/backoffice/support` não lista pedido `CONCLUIDO`.
-- [ ] **C13** `dominio` — Concluir o pedido pela equipe deixa o status `CONCLUIDO`.
-- [ ] **C14** `persistencia` — Concluir grava o e-mail de quem atendeu e o instante.
-- [ ] **C15** `dominio` — Com o pedido anterior concluído, o dono consegue abrir outro para o mesmo anúncio.
+- [x] **C1** `dominio` — Dono do anúncio pede apoio e o pedido é criado.
+- [x] **C2** `seguranca` — Conta que não é dona do anúncio recebe 403 ao pedir apoio para ele.
+- [x] **C3** `seguranca` — Pedido de apoio sem autenticação responde 403.
+- [x] **C4** `dominio` — Pedido de apoio nasce com status `ABERTO`.
+- [x] **C5** `persistencia` — O pedido grava o anúncio e o solicitante.
+- [x] **C6** `dominio` — Segundo pedido para um anúncio que já tem pedido aberto é recusado com 409.
+- [x] **C7** `contrato-api` — Pedido de apoio para anúncio inexistente responde 404.
+- [x] **C8** `contrato-api` — `GET /api/v1/announcements/{id}/apoio` devolve o pedido vigente para o dono.
+- [x] **C9** `contrato-api` — `GET /api/v1/announcements/{id}/apoio` responde 404 quando não há pedido.
+- [x] **C10** `seguranca` — `GET /api/v1/backoffice/support` com papel diferente de `INTERNO` responde 403.
+- [x] **C11** `contrato-api` — `GET /api/v1/backoffice/support` lista pedido `ABERTO`.
+- [x] **C12** `contrato-api` — `GET /api/v1/backoffice/support` não lista pedido `CONCLUIDO`.
+- [x] **C13** `dominio` — Concluir o pedido pela equipe deixa o status `CONCLUIDO`.
+- [x] **C14** `persistencia` — Concluir grava o e-mail de quem atendeu e o instante.
+- [x] **C15** `dominio` — Com o pedido anterior concluído, o dono consegue abrir outro para o mesmo anúncio.
 
 ## Contrato técnico
 - Entidade `SupportRequest`: anúncio, solicitante, `status`, `mensagem` opcional, `createdAt`, `handledBy`, `handledAt`.
