@@ -44,7 +44,12 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/auth/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/users").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/announcements").permitAll()
+                // Antes do curinga: o primeiro casamento vence, e "/*" casava
+                // com "/me", servindo a lista da conta sem sessao.
+                .requestMatchers("/api/v1/announcements/me", "/api/v1/announcements/me/**").authenticated()
                 .requestMatchers(HttpMethod.GET, "/api/v1/announcements/*").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/plans").permitAll()
+                .requestMatchers("/api/v1/backoffice/**").hasRole("INTERNO")
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

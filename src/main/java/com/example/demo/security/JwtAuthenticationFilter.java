@@ -3,6 +3,7 @@ package com.example.demo.security;
 import java.io.IOException;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -59,6 +60,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 .getContext()
                 .getAuthentication() == null) {
 
+            // Carregado do banco a cada requisicao: as authorities vem do
+            // estado atual da conta, entao remover o papel tem efeito imediato.
+            // A claim "role" segue no token, mas so como dica para a interface.
             UserDetails userDetails =
                 userDetailsService
                     .loadUserByUsername(email);

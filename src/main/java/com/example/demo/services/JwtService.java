@@ -38,6 +38,8 @@ public class JwtService {
         claims.put("email", user.getEmail());
         claims.put("fullname", user.getFullname());
         claims.put("photo", user.getPhoto());
+        claims.put("accountType", user.getAccountType().name());
+        claims.put("role", user.getRole().name());
 
         return Jwts.builder()
                 .setClaims(claims)
@@ -77,6 +79,10 @@ public class JwtService {
             .build()
             .parseClaimsJws(token)
             .getBody();
+    }
+
+    public String extractRole(String token) {
+        return extractClaim(token, claims -> claims.get("role", String.class));
     }
 
     public boolean isTokenValid(
