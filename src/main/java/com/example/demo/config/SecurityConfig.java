@@ -80,8 +80,11 @@ public class SecurityConfig {
             "http://localhost:3000" // seu Next.js
         ));
 
+        // PATCH entrou com inativar e reativar (spec 22). Sem ele o preflight
+        // reprova e o navegador nem chega a enviar a requisicao: nao aparece
+        // no log do servidor, e a tela falha sem dizer o que aconteceu.
         configuration.setAllowedMethods(List.of(
-            "GET", "POST", "PUT", "DELETE", "OPTIONS"
+            "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"
         ));
 
         configuration.setAllowedHeaders(List.of("*"));
