@@ -132,6 +132,16 @@ public class Announcement {
     @Column(name = "search_text", columnDefinition = "TEXT")
     private String searchText;
 
+    /**
+     * So a cidade, minuscula e sem acento, para o filtro por igualdade.
+     *
+     * Separada de searchText de proposito: aquela concatena titulo, cidade e
+     * estado, e filtrar cidade contra ela faria um anuncio chamado "Casa em
+     * Recife" localizado na Paraiba responder ao filtro de Recife.
+     */
+    @Column(name = "city_search", length = 40)
+    private String citySearch;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
@@ -150,7 +160,7 @@ public class Announcement {
         atualizarBusca();
     }
 
-    /** Precisa concordar com o unaccent do Postgres usado na carga da V3. */
+    /** Precisa concordar com o unaccent do Postgres usado na carga das migracoes. */
     private void atualizarBusca() {
         String bruto = "%s %s %s".formatted(
             title == null ? "" : title,
@@ -158,16 +168,29 @@ public class Announcement {
             state == null ? "" : state
         );
 
-        // Bloco dos diacriticos combinantes, escrito como intervalo de codigo:
-        // a classe \p{...} atravessa mal as camadas de escape das ferramentas.
-        searchText = java.text.Normalizer
-            .normalize(bruto, java.text.Normalizer.Form.NFD)
+        searchText = normalizar(bruto);
+        citySearch = normalizar(city == null ? "" : city);
+    }
+
+    /**
+     * Minuscula e sem acento.
+     *
+     * O bloco dos diacriticos combinantes vai como intervalo de codigo: a
+     * classe \p{...} atravessa mal as camadas de escape das ferramentas.
+     */
+    public static String normalizar(String valor) {
+        return java.text.Normalizer
+            .normalize(valor, java.text.Normalizer.Form.NFD)
             .replaceAll("[̀-ͯ]", "")
             .toLowerCase();
     }
 
     public String getSearchText() {
         return searchText;
+    }
+
+    public String getCitySearch() {
+        return citySearch;
     }
 
     public Long getId() {

@@ -15,8 +15,13 @@ import com.example.demo.exceptions.custom.BusinessException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.math.BigDecimal;
+
 import com.example.demo.dtos.AnnouncementCreateDTO;
 import com.example.demo.dtos.AnnouncementDetailDTO;
+import com.example.demo.dtos.AnnouncementFilter;
+import com.example.demo.enums.PropertyType;
+import com.example.demo.enums.ReasonType;
 import com.example.demo.dtos.AnnouncementListDTO;
 import com.example.demo.dtos.AnnouncementQuotaDTO;
 import com.example.demo.dtos.AnnouncementUpdateDTO;
@@ -41,16 +46,35 @@ public class AnnouncementController {
     private final SupportRequestService supportRequestService;
     private final UserLibraryService userLibraryService;
 
+    /**
+     * Os filtros se combinam por intersecao: cada parametro presente estreita o
+     * resultado, ausente nao restringe nada.
+     *
+     * `type` e repetivel e vale como "qualquer um destes". Valor fora do enum
+     * e recusado pelo binding do Spring, com 400.
+     *
+     * Faixa invertida (minPrice maior que maxPrice) devolve pagina vazia, nao
+     * 400: e consulta sem resultado, nao requisicao malformada. Impedir a
+     * inversao e trabalho da tela.
+     */
     @Operation(summary = "Buscar anúncios")
     @GetMapping
     public ResponseEntity<Page<AnnouncementListDTO>> list(
         @RequestParam(required = false) String q,
+        @RequestParam(required = false) String city,
+        @RequestParam(required = false) BigDecimal minPrice,
+        @RequestParam(required = false) BigDecimal maxPrice,
+        @RequestParam(required = false) List<PropertyType> type,
+        @RequestParam(required = false) ReasonType reason,
         @PageableDefault(size = 12, sort = "createdAt", direction = Sort.Direction.DESC)
         Pageable pageable
     ) {
         validarOrdenacao(pageable);
 
-        return ResponseEntity.ok(announcementService.findAll(q, pageable));
+        AnnouncementFilter filtro =
+            AnnouncementFilter.de(q, city, minPrice, maxPrice, type, reason);
+
+        return ResponseEntity.ok(announcementService.findAll(filtro, pageable));
     }
 
     /**

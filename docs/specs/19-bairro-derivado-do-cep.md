@@ -6,6 +6,8 @@ Quem procura imóvel recorta por bairro, e ninguém precisa cadastrar bairro nen
 ## Depende de
 18-filtros-do-acervo
 
+> **Aprovada no gate humano em 2026-09-29.** Todos os critérios aceitos.
+
 ## Critérios
 - [ ] **C1** `integracao` — Anúncio criado com CEP que a consulta resolve grava o bairro sem o anunciante digitá-lo.
 - [ ] **C2** `experiencia` — O bairro resolvido aparece no formulário, em campo editável, antes de publicar.

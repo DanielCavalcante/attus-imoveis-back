@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import com.example.demo.dtos.AnnouncementCreateDTO;
 import com.example.demo.dtos.AnnouncementDetailDTO;
+import com.example.demo.dtos.AnnouncementFilter;
 import com.example.demo.dtos.AnnouncementListDTO;
 import com.example.demo.dtos.AnnouncementQuotaDTO;
 import com.example.demo.dtos.AnnouncementUpdateDTO;
@@ -40,29 +41,25 @@ public class AnnouncementService {
     @Value("${attus.quota.pf.mensal:3}")
     private int limiteMensalPf;
 
+    /**
+     * Acervo publico: termo e filtros numa consulta so.
+     *
+     * A normalizacao de cada valor e a regra de "branco nao filtra" vivem em
+     * AnnouncementFilter, onde o controlador e o teste enxergam as duas.
+     */
     @Transactional(readOnly = true)
-    public Page<AnnouncementListDTO> findAll(String termo, Pageable pageable) {
-        String normalizado = normalizar(termo);
-
-        // Termo ausente, vazio ou so espaco significa "sem filtro", nao "nada
-        // encontrado": quem abre a listagem sem digitar quer ver o acervo.
-        Page<Announcement> pagina = normalizado.isEmpty()
-            ? repository.findAll(pageable)
-            : repository.buscar(normalizado, pageable);
+    public Page<AnnouncementListDTO> findAll(AnnouncementFilter filtro, Pageable pageable) {
+        Page<Announcement> pagina = repository.filtrar(
+            filtro.termo(),
+            filtro.cidade(),
+            filtro.precoMinimo(),
+            filtro.precoMaximo(),
+            filtro.tipos(),
+            filtro.finalidade(),
+            pageable
+        );
 
         return pagina.map(AnnouncementListDTO::fromEntity);
-    }
-
-    /** Mesma normalizacao da coluna: minuscula e sem acento. */
-    private String normalizar(String termo) {
-        if (termo == null) {
-            return "";
-        }
-
-        return java.text.Normalizer
-            .normalize(termo.trim(), java.text.Normalizer.Form.NFD)
-            .replaceAll("[̀-ͯ]", "")
-            .toLowerCase();
     }
 
     @Transactional

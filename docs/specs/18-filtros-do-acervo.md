@@ -6,6 +6,8 @@ Quem procura imóvel recorta o acervo por cidade, faixa de preço, tipo e finali
 ## Depende de
 16-busca-e-ordenacao-no-servidor
 
+> **Aprovada no gate humano em 2026-09-29.** Todos os critérios aceitos.
+
 ## Critérios
 - [ ] **C1** `dominio` — `city=Recife` devolve apenas anúncios cuja cidade é Recife.
 - [ ] **C2** `dominio` — `city=joao pessoa` devolve o anúncio cuja cidade é "João Pessoa".

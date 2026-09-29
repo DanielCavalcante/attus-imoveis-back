@@ -6,6 +6,8 @@ Quem anuncia passa a tirar o imóvel do ar sem perdê-lo, e a quota deixa de con
 ## Depende de
 06-quota-mensal-da-pf
 
+> **Aprovada no gate humano em 2026-09-29.** Todos os critérios aceitos.
+
 ## Critérios
 - [ ] **C1** `dominio` — Anúncio recém-criado nasce ativo.
 - [ ] **C2** `contrato-api` — Existe rota para inativar um anúncio da própria conta.
