@@ -46,6 +46,10 @@ public record AnnouncementUpdateDTO(
     )
     String cep,
 
+    /** Sai do CEP quando o anunciante nao informa; informado, prevalece. */
+    @Size(max = 60)
+    String neighborhood,
+
     @Size(max = 60)
     String complement,
 

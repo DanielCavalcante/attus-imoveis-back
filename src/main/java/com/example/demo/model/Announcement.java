@@ -142,6 +142,20 @@ public class Announcement {
     @Column(name = "city_search", length = 40)
     private String citySearch;
 
+    /**
+     * Sai do CEP que o anunciante ja digita, e pode ser corrigido por ele.
+     *
+     * Nulo e estado legitimo: CEP que nao resolve, ou servico fora do ar, nao
+     * impedem a publicacao. Anuncio sem bairro so nao responde a filtro de
+     * bairro.
+     */
+    @Size(max = 60)
+    @Column(length = 60)
+    private String neighborhood;
+
+    @Column(name = "neighborhood_search", length = 60)
+    private String neighborhoodSearch;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
@@ -170,6 +184,15 @@ public class Announcement {
 
         searchText = normalizar(bruto);
         citySearch = normalizar(city == null ? "" : city);
+        neighborhoodSearch = neighborhood == null ? null : normalizar(neighborhood);
+    }
+
+    public String getNeighborhood() {
+        return neighborhood;
+    }
+
+    public void setNeighborhood(String neighborhood) {
+        this.neighborhood = neighborhood;
     }
 
     /**

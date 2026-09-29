@@ -20,6 +20,7 @@ import com.example.demo.model.Announcement;
 public record AnnouncementFilter(
     String termo,
     String cidade,
+    String bairro,
     BigDecimal precoMinimo,
     BigDecimal precoMaximo,
     Collection<PropertyType> tipos,
@@ -38,6 +39,7 @@ public record AnnouncementFilter(
     public static AnnouncementFilter de(
         String termo,
         String cidade,
+        String bairro,
         BigDecimal precoMinimo,
         BigDecimal precoMaximo,
         List<PropertyType> tipos,
@@ -46,6 +48,7 @@ public record AnnouncementFilter(
         return new AnnouncementFilter(
             normalizado(termo),
             normalizado(cidade),
+            normalizado(bairro),
             precoMinimo,
             precoMaximo,
             tipos == null || tipos.isEmpty() ? EnumSet.allOf(PropertyType.class) : tipos,

@@ -9,6 +9,7 @@ public record AnnouncementDetailDTO(
     String title,
     String description,
     String city,
+    String neighborhood,
     String state,
     String street,
     String image,

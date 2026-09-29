@@ -62,6 +62,7 @@ public class AnnouncementController {
     public ResponseEntity<Page<AnnouncementListDTO>> list(
         @RequestParam(required = false) String q,
         @RequestParam(required = false) String city,
+        @RequestParam(required = false) String neighborhood,
         @RequestParam(required = false) BigDecimal minPrice,
         @RequestParam(required = false) BigDecimal maxPrice,
         @RequestParam(required = false) List<PropertyType> type,
@@ -72,9 +73,27 @@ public class AnnouncementController {
         validarOrdenacao(pageable);
 
         AnnouncementFilter filtro =
-            AnnouncementFilter.de(q, city, minPrice, maxPrice, type, reason);
+            AnnouncementFilter.de(q, city, neighborhood, minPrice, maxPrice, type, reason);
 
         return ResponseEntity.ok(announcementService.findAll(filtro, pageable));
+    }
+
+    /**
+     * As cidades e os bairros que existem sao os que tem anuncio, nao um
+     * cadastro. E isto que faz o sistema nascer em Joao Pessoa e funcionar em
+     * Belo Horizonte no dia em que alguem publicar la, sem ninguem cadastrar
+     * nada.
+     */
+    @Operation(summary = "Cidades com anúncio publicado")
+    @GetMapping("/cidades")
+    public ResponseEntity<List<String>> cidades() {
+        return ResponseEntity.ok(announcementService.cidades());
+    }
+
+    @Operation(summary = "Bairros com anúncio publicado numa cidade")
+    @GetMapping("/bairros")
+    public ResponseEntity<List<String>> bairros(@RequestParam String city) {
+        return ResponseEntity.ok(announcementService.bairrosDe(city));
     }
 
     /**

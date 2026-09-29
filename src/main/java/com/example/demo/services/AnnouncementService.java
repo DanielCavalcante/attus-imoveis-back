@@ -36,6 +36,7 @@ public class AnnouncementService {
     private final AnnouncementRepository repository;
     private final UserRepository userRepository;
     private final AnnouncementMapper mapper;
+    private final com.example.demo.integracoes.ConsultaDeCep consultaDeCep;
 
     /** Regra de negocio em propriedade: mudar o limite nao pode exigir deploy de codigo. */
     @Value("${attus.quota.pf.mensal:3}")
@@ -52,6 +53,7 @@ public class AnnouncementService {
         Page<Announcement> pagina = repository.filtrar(
             filtro.termo(),
             filtro.cidade(),
+            filtro.bairro(),
             filtro.precoMinimo(),
             filtro.precoMaximo(),
             filtro.tipos(),
@@ -71,10 +73,27 @@ public class AnnouncementService {
 
         Announcement entity = mapper.toEntity(dto);
         entity.setUser(user);
+        resolverBairro(entity, dto.neighborhood(), dto.cep());
 
         Announcement saved = repository.save(entity);
 
         return mapper.toDetailDTO(saved);
+    }
+
+    /**
+     * Bairro informado pelo anunciante prevalece sobre o resolvido pelo CEP.
+     *
+     * Cidade com CEP unico devolve bairro vazio ou errado, e quem conhece o
+     * endereco e quem mora nele. Sem informado e sem resolvido, o anuncio
+     * publica sem bairro: ele so nao responde a filtro de bairro.
+     */
+    private void resolverBairro(Announcement entity, String informado, String cep) {
+        if (informado != null && !informado.isBlank()) {
+            entity.setNeighborhood(informado.trim());
+            return;
+        }
+
+        entity.setNeighborhood(consultaDeCep.bairroDe(cep).orElse(null));
     }
 
     @Transactional(readOnly = true)
@@ -122,9 +141,26 @@ public class AnnouncementService {
     public AnnouncementDetailDTO edit(@NonNull Long id, AnnouncementUpdateDTO dto, String email) {
         Announcement entity = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Anúncio não encontrado"));
         mapper.updateEntity(dto, entity);
+        resolverBairro(entity, dto.neighborhood(), dto.cep());
         Announcement saved = repository.save(entity);
 
         return mapper.toDetailDTO(saved);
+    }
+
+    /** A lista e o que existe no acervo; cidade sem anuncio nao aparece. */
+    @Transactional(readOnly = true)
+    public List<String> cidades() {
+        return repository.cidades();
+    }
+
+    /** Idem para bairros, dentro da cidade pedida e ja normalizada. */
+    @Transactional(readOnly = true)
+    public List<String> bairrosDe(String cidade) {
+        if (cidade == null || cidade.isBlank()) {
+            return List.of();
+        }
+
+        return repository.bairrosDe(Announcement.normalizar(cidade.trim()));
     }
 
     @Transactional(readOnly = true)

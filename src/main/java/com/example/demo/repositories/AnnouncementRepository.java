@@ -49,6 +49,7 @@ public interface AnnouncementRepository extends JpaRepository<Announcement, Long
         select a from Announcement a
         where (:termo = '' or a.searchText like concat('%', :termo, '%'))
           and (:cidade = '' or a.citySearch = :cidade)
+          and (:bairro = '' or a.neighborhoodSearch = :bairro)
           and (:precoMinimo is null or a.price >= :precoMinimo)
           and (:precoMaximo is null or a.price <= :precoMaximo)
           and a.propertyType in :tipos
@@ -57,12 +58,31 @@ public interface AnnouncementRepository extends JpaRepository<Announcement, Long
     Page<Announcement> filtrar(
         @Param("termo") String termo,
         @Param("cidade") String cidade,
+        @Param("bairro") String bairro,
         @Param("precoMinimo") BigDecimal precoMinimo,
         @Param("precoMaximo") BigDecimal precoMaximo,
         @Param("tipos") Collection<PropertyType> tipos,
         @Param("finalidade") ReasonType finalidade,
         Pageable pageable
     );
+
+    /**
+     * Os bairros que existem numa cidade sao os que tem anuncio, nao um
+     * cadastro. Anuncio sem bairro fica de fora por construcao.
+     */
+    @Query("""
+        select distinct a.neighborhood from Announcement a
+        where a.citySearch = :cidade and a.neighborhood is not null
+        order by a.neighborhood
+        """)
+    List<String> bairrosDe(@Param("cidade") String cidade);
+
+    /** Mesma regra da lista de bairros, um nivel acima. */
+    @Query("select distinct a.city from Announcement a order by a.city")
+    List<String> cidades();
+
+    /** Alvo da carga unica: anuncio publicado antes de o bairro existir. */
+    List<Announcement> findByNeighborhoodIsNull();
 
     /** Agregado no banco: carregar a lista inteira so para contar nao escala. */
     long countByUserEmailAndCreatedAtGreaterThanEqual(String email, LocalDateTime inicio);
