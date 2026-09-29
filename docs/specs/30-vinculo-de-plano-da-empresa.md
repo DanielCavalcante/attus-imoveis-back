@@ -23,6 +23,7 @@ gateway, e o teto de anúncios dela passa a vir desse plano.
 - [ ] **C12** `persistencia` — o vínculo registra quem liberou e quando.
 - [ ] **C13** `contrato-api` — `GET /announcements/quota` de conta PJ passa a refletir o limite do plano.
 - [ ] **C14** `dominio` — liberar plano inativo é recusado: plano desativado não se vende nem se dá.
+- [ ] **C15** `dominio` — empresa aprovada e sem plano vigente é recusada ao tentar publicar.
 
 ## Contrato técnico
 
@@ -33,6 +34,12 @@ que o próximo downgrade sobrescreve.
 `AnnouncementService.temTeto` hoje responde "só PF". Ele passa a responder pelo
 plano quando a conta é PJ, e a propriedade `attus.quota.pf.ativos` continua
 valendo só para PF — a spec 06 não é revogada aqui.
+
+Ausência de plano não é teto zero: é portão, como a aprovação da spec 28. Por
+isso C15 recusa com 403 e mensagem própria — "contrate um plano" é caminho
+diferente de "libere uma vaga", e 409 mandaria a pessoa inativar anúncio que
+não resolveria nada. São dois portões em sequência, e a mensagem tem de dizer
+qual deles fechou.
 
 C11 é leitura, não confirmação: o servidor informa o impacto, quem decide é a
 pessoa no backoffice. É o que sustenta "avise, mas não bloqueie".
@@ -60,8 +67,5 @@ pessoa no backoffice. É o que sustenta "avise, mas não bloqueie".
 
 ## Perguntas em aberto
 
-- **Empresa aprovada e sem nenhum plano: pode publicar?** Muda C2 e o desenho
-  de `temTeto`, e não é derivável — o repositório nunca ligou empresa a plano,
-  então não há precedente para ler. As leituras possíveis são "não publica até
-  ter plano", "publica com o teto da PF" e "publica sem teto". Insumo que
-  falta: qual delas é a regra do negócio.
+Nenhuma. A que existia — empresa aprovada e sem plano pode publicar? — foi
+respondida: não pode, e virou C15.
