@@ -87,9 +87,34 @@ public class ImagemService {
         }
     }
 
+    private static final String PREFIXO = "/api/v1/imagens/";
+
     /** Onde a imagem enviada fica acessivel. E isto que vai para o anuncio. */
     public static String caminhoDe(String nomeDoObjeto) {
-        return "/api/v1/imagens/" + nomeDoObjeto;
+        return PREFIXO + nomeDoObjeto;
+    }
+
+    /**
+     * O objeto por tras de um caminho, ou nulo quando nao ha objeto.
+     *
+     * Nulo e resposta legitima: anuncio de antes da spec 32 guarda endereco
+     * externo, que nao corresponde a nada no bucket.
+     */
+    public static String objetoDe(String caminho) {
+        if (caminho == null || !caminho.startsWith(PREFIXO)) {
+            return null;
+        }
+
+        return caminho.substring(PREFIXO.length());
+    }
+
+    /** O tipo do que foi guardado, para a galeria nao ter de adivinhar. */
+    public String contentTypeDe(String nomeDoObjeto) {
+        Blob blob = storage.get(BlobId.of(bucket, nomeDoObjeto));
+
+        return blob == null || blob.getContentType() == null
+            ? "image/jpeg"
+            : blob.getContentType();
     }
 
     /**

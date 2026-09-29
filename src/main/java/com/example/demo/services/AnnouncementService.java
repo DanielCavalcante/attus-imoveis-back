@@ -24,6 +24,7 @@ import com.example.demo.dtos.AnnouncementQuotaDTO;
 import com.example.demo.dtos.AnnouncementUpdateDTO;
 import com.example.demo.enums.AccountType;
 import com.example.demo.enums.AnalysisStatus;
+import com.example.demo.exceptions.custom.BusinessException;
 import com.example.demo.exceptions.custom.ConflictException;
 import com.example.demo.exceptions.custom.PublicacaoBloqueadaException;
 import com.example.demo.exceptions.custom.ResourceNotFoundException;
@@ -49,10 +50,16 @@ public class AnnouncementService {
     private final com.example.demo.repositories.NeighborhoodRepository neighborhoodRepository;
     private final com.example.demo.repositories.CompanyRepository companyRepository;
     private final com.example.demo.repositories.SubscriptionRepository subscriptionRepository;
+    private final com.example.demo.repositories.AnnouncementImageRepository imagemRepository;
+    private final ImagemService imagemService;
 
     /** Regra de negocio em propriedade: mudar o limite nao pode exigir deploy de codigo. */
     @Value("${attus.quota.pf.ativos:3}")
     private int limiteDeAtivosPf;
+
+    /** Teto de fotos por anuncio. Em propriedade, como o da quota. */
+    @Value("${attus.imagens.por-anuncio:12}")
+    private int limiteDeImagens;
 
     /**
      * Acervo publico: termo e filtros numa consulta so.
@@ -84,13 +91,134 @@ public class AnnouncementService {
         ensurePodePublicar(user);
         ensureQuota(user);
 
+        // Antes de gravar qualquer coisa: fotos conferidas, capa escolhida.
+        // Recusa nao pode deixar nem linha nem objeto para tras.
+        List<String> fotos = fotosDe(dto.imagens(), dto.image(), user.getEmail());
+        int capa = indiceDaCapa(dto.capa(), fotos.size());
+
         Announcement entity = mapper.toEntity(dto);
         entity.setUser(user);
+        // A capa espelhada: e dela que a listagem e o compartilhamento vivem.
+        entity.setImage(fotos.get(capa));
         resolverBairro(entity, dto.neighborhood(), dto.cep());
 
         Announcement saved = repository.save(entity);
 
-        return mapper.toDetailDTO(saved);
+        gravarImagens(saved, fotos, capa);
+
+        return detalheCom(saved);
+    }
+
+    /**
+     * As fotos do anuncio, conferidas.
+     *
+     * Lista vazia cai no campo unico, que e o que o anuncio de antes da spec
+     * 34 tem -- e o que a tela antiga manda. Assim as duas formas convivem sem
+     * um ramo de compatibilidade espalhado pelo resto.
+     */
+    private List<String> fotosDe(List<String> imagens, String image, String dono) {
+        List<String> fotos = imagens == null || imagens.isEmpty()
+            ? (image == null || image.isBlank() ? List.of() : List.of(image))
+            : imagens.stream().filter(f -> f != null && !f.isBlank()).toList();
+
+        if (fotos.isEmpty()) {
+            throw new BusinessException("A imagem do anúncio é obrigatória");
+        }
+
+        if (fotos.size() > limiteDeImagens) {
+            throw new BusinessException(
+                "Um anúncio aceita no máximo %d fotos".formatted(limiteDeImagens)
+            );
+        }
+
+        fotos.forEach(foto -> exigirDono(foto, dono));
+
+        return fotos;
+    }
+
+    /**
+     * A foto tem de ter sido enviada por quem esta anunciando.
+     *
+     * Sem isto, o identificador que o envio devolve vira referencia que
+     * qualquer conta anexa ao proprio anuncio -- a foto do imovel de um
+     * terceiro publicada como sua.
+     *
+     * Imagem de anuncio antigo nao tem objeto no bucket e passa: ela ja estava
+     * gravada antes de existir dono para conferir.
+     */
+    private void exigirDono(String foto, String dono) {
+        String objeto = ImagemService.objetoDe(foto);
+
+        if (objeto == null) {
+            return;
+        }
+
+        imagemService.donoDe(objeto).ifPresent(quemEnviou -> {
+            if (!quemEnviou.equals(dono)) {
+                throw new PublicacaoBloqueadaException(
+                    "Esta foto foi enviada por outra conta"
+                );
+            }
+        });
+    }
+
+    private int indiceDaCapa(Integer escolhida, int quantas) {
+        if (escolhida == null) {
+            // Sem escolha, a primeira: card e busca precisam de UMA imagem, e
+            // nao ter resposta seria pior que ter uma por convencao.
+            return 0;
+        }
+
+        if (escolhida >= quantas) {
+            throw new BusinessException("A capa escolhida não está entre as fotos");
+        }
+
+        return escolhida;
+    }
+
+    private void gravarImagens(Announcement anuncio, List<String> fotos, int capa) {
+        for (int i = 0; i < fotos.size(); i++) {
+            String objeto = ImagemService.objetoDe(fotos.get(i));
+
+            if (objeto == null) {
+                // Endereco externo de anuncio antigo: vive so na coluna
+                // espelhada, porque nao ha objeto no bucket para referenciar.
+                continue;
+            }
+
+            com.example.demo.model.AnnouncementImage imagem =
+                new com.example.demo.model.AnnouncementImage();
+
+            imagem.setAnnouncement(anuncio);
+            imagem.setObjectName(objeto);
+            imagem.setContentType(imagemService.contentTypeDe(objeto));
+            imagem.setPosicao(i);
+            imagem.setCapa(i == capa);
+
+            imagemRepository.save(imagem);
+        }
+    }
+
+    /** O detalhe com as fotos juntas, na ordem. */
+    private AnnouncementDetailDTO detalheCom(Announcement anuncio) {
+        List<String> fotos = imagemRepository
+            .findByAnnouncementIdOrderByPosicaoAsc(anuncio.getId())
+            .stream()
+            .map(imagem -> ImagemService.caminhoDe(imagem.getObjectName()))
+            .toList();
+
+        AnnouncementDetailDTO base = mapper.toDetailDTO(anuncio);
+
+        // Anuncio de antes da spec 34 nao tem linha nenhuma: ele responde com
+        // a unica imagem que sempre teve.
+        return new AnnouncementDetailDTO(
+            base.id(), base.title(), base.description(), base.city(),
+            base.neighborhood(), base.state(), base.street(), base.image(),
+            base.streetNumber(), base.cep(), base.complement(),
+            base.propertyType(), base.reason(), base.rooms(), base.bathRooms(),
+            base.area(), base.price(),
+            fotos.isEmpty() ? List.of(base.image()) : fotos
+        );
     }
 
     /**
@@ -252,7 +380,14 @@ public class AnnouncementService {
 
     @Transactional
     public void excluir(@NonNull Long id, String email) {
-        repository.delete(doDono(id, email));
+        Announcement anuncio = doDono(id, email);
+
+        // A linha some por cascata do banco; o objeto no bucket, nao -- ele
+        // ficaria pago e sem dono.
+        imagemRepository.findByAnnouncementIdOrderByPosicaoAsc(anuncio.getId())
+            .forEach(imagem -> imagemService.apagar(imagem.getObjectName()));
+
+        repository.delete(anuncio);
     }
 
     /**
@@ -279,11 +414,45 @@ public class AnnouncementService {
     @Transactional
     public AnnouncementDetailDTO edit(@NonNull Long id, AnnouncementUpdateDTO dto, String email) {
         Announcement entity = doDono(id, email);
+
+        List<String> fotos = fotosDe(dto.imagens(), dto.image(), email);
+        int capa = indiceDaCapa(dto.capa(), fotos.size());
+
         mapper.updateEntity(dto, entity);
+        entity.setImage(fotos.get(capa));
         resolverBairro(entity, dto.neighborhood(), dto.cep());
+
         Announcement saved = repository.save(entity);
 
-        return mapper.toDetailDTO(saved);
+        trocarImagens(saved, fotos, capa);
+
+        return detalheCom(saved);
+    }
+
+    /**
+     * Substitui o conjunto de fotos, apagando do bucket o que saiu.
+     *
+     * Objeto que nenhum anuncio referencia mais e lixo que ninguem cobra --
+     * e cobra, no fim do mes, em armazenamento.
+     */
+    private void trocarImagens(Announcement anuncio, List<String> fotos, int capa) {
+        java.util.Set<String> ficam = fotos.stream()
+            .map(ImagemService::objetoDe)
+            .filter(java.util.Objects::nonNull)
+            .collect(Collectors.toSet());
+
+        imagemRepository.findByAnnouncementIdOrderByPosicaoAsc(anuncio.getId())
+            .stream()
+            .map(com.example.demo.model.AnnouncementImage::getObjectName)
+            .filter(objeto -> !ficam.contains(objeto))
+            .forEach(imagemService::apagar);
+
+        imagemRepository.deleteByAnnouncementId(anuncio.getId());
+        // Sem o flush, a insercao corre contra a remocao e o indice unico de
+        // posicao recusa a linha nova antes de a antiga sair.
+        imagemRepository.flush();
+
+        gravarImagens(anuncio, fotos, capa);
     }
 
     /**
@@ -365,7 +534,7 @@ public class AnnouncementService {
             throw new ResourceNotFoundException("Anúncio não encontrado com id: " + id);
         }
 
-        return mapper.toDetailDTO(announcement);
+        return detalheCom(announcement);
     }
 
 }

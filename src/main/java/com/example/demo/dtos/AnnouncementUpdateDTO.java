@@ -1,5 +1,6 @@
 package com.example.demo.dtos;
 import java.math.BigDecimal;
+import java.util.List;
 
 import com.example.demo.enums.PropertyType;
 import com.example.demo.enums.ReasonType;
@@ -31,7 +32,11 @@ public record AnnouncementUpdateDTO(
     @Size(max = 80)
     String street,
 
-    @NotBlank(message = "A imagem do anúncio é obrigatória")
+    /**
+     * A capa, espelhada. Continua aqui porque a listagem e o anuncio antigo
+     * dependem dela; quando `imagens` vem preenchida, quem manda e ela e o
+     * servico sobrescreve este campo.
+     */
     @Size(max = 244, message = "A referência da imagem deve ter no máximo 244 caracteres")
     // E isto que faz a mudanca ser seguranca, e nao interface: sem recusar o
     // endereco externo aqui, bastaria nao usar a tela para voltar a apontar
@@ -41,6 +46,16 @@ public record AnnouncementUpdateDTO(
         message = "A imagem deve ser enviada, e não um endereço externo"
     )
     String image,
+
+    /** As fotos do anuncio, na ordem em que aparecem. Vazia mantem so `image`. */
+    List<@Pattern(
+        regexp = "^(?!\s*https?://).*",
+        message = "A imagem deve ser enviada, e não um endereço externo"
+    ) String> imagens,
+
+    /** Qual das `imagens` e a capa. Nulo significa a primeira. */
+    @PositiveOrZero(message = "Índice de capa inválido")
+    Integer capa,
 
     @NotNull(message = "Número é obrigatório")
     @Positive(message = "Número inválido")

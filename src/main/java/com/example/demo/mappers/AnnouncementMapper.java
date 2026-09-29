@@ -16,6 +16,8 @@ public interface AnnouncementMapper {
     @Mapping(target = "user", ignore = true)
     Announcement toEntity(AnnouncementCreateDTO dto);
 
+    /** A lista de fotos nao sai da entidade: quem a monta e o servico. */
+
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "user", ignore = true)
     void updateEntity(
@@ -23,6 +25,7 @@ public interface AnnouncementMapper {
         @MappingTarget Announcement entity
     );
 
+    @Mapping(target = "imagens", ignore = true)
     AnnouncementDetailDTO toDetailDTO(Announcement entity);
 
 
