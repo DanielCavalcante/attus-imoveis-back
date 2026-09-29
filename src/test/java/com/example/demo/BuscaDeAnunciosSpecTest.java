@@ -49,6 +49,7 @@ class BuscaDeAnunciosSpecTest extends PostgresIntegrationTest {
         userRepository.deleteAll();
 
         dono = cadastrarPj();
+        aprovarEmpresa(dono);
     }
 
     // ---------- C1 e C2 ----------

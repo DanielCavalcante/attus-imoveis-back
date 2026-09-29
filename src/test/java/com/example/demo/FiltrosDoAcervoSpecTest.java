@@ -44,6 +44,7 @@ class FiltrosDoAcervoSpecTest extends PostgresIntegrationTest {
         userRepository.deleteAll();
 
         dono = cadastrarPj();
+        aprovarEmpresa(dono);
     }
 
     // ---------- C1 a C3: cidade ----------

@@ -295,7 +295,13 @@ class AnunciosPaginadosSpecTest extends PostgresIntegrationTest {
     }
 
     private String cadastrar() throws Exception {
-        return cadastrarComTipo("PJ", "\"%014d\"".formatted(SEQUENCIA.getAndIncrement()));
+        String email = cadastrarComTipo("PJ", "\"%014d\"".formatted(SEQUENCIA.getAndIncrement()));
+
+        // Toda conta desta suite anuncia, e desde a spec 28 anunciar exige
+        // analise aprovada.
+        aprovarEmpresa(email);
+
+        return email;
     }
 
     private String cadastrarPj() throws Exception {

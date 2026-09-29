@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -22,10 +23,13 @@ import com.example.demo.dtos.AnnouncementListDTO;
 import com.example.demo.dtos.AnnouncementQuotaDTO;
 import com.example.demo.dtos.AnnouncementUpdateDTO;
 import com.example.demo.enums.AccountType;
+import com.example.demo.enums.AnalysisStatus;
 import com.example.demo.exceptions.custom.ConflictException;
+import com.example.demo.exceptions.custom.PublicacaoBloqueadaException;
 import com.example.demo.exceptions.custom.ResourceNotFoundException;
 import com.example.demo.mappers.AnnouncementMapper;
 import com.example.demo.model.Announcement;
+import com.example.demo.model.Company;
 import com.example.demo.model.User;
 import com.example.demo.repositories.AnnouncementRepository;
 import com.example.demo.repositories.UserRepository;
@@ -43,6 +47,7 @@ public class AnnouncementService {
     private final AnnouncementMapper mapper;
     private final com.example.demo.integracoes.ConsultaDeCep consultaDeCep;
     private final com.example.demo.repositories.NeighborhoodRepository neighborhoodRepository;
+    private final com.example.demo.repositories.CompanyRepository companyRepository;
 
     /** Regra de negocio em propriedade: mudar o limite nao pode exigir deploy de codigo. */
     @Value("${attus.quota.pf.ativos:3}")
@@ -74,7 +79,8 @@ public class AnnouncementService {
     public AnnouncementDetailDTO create(AnnouncementCreateDTO dto, String email) {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
 
-        // Antes de qualquer gravacao: recusa por quota nao pode deixar rastro.
+        // Antes de qualquer gravacao: recusa nao pode deixar rastro.
+        ensurePodePublicar(user);
         ensureQuota(user);
 
         Announcement entity = mapper.toEntity(dto);
@@ -117,9 +123,54 @@ public class AnnouncementService {
 
         long ativos = ativosDe(email);
 
-        return temTeto(user)
+        AnnouncementQuotaDTO saldo = temTeto(user)
             ? AnnouncementQuotaDTO.de(limiteDeAtivosPf, ativos)
             : AnnouncementQuotaDTO.semLimite(ativos);
+
+        // O saldo e verdadeiro mesmo com a publicacao trancada, e continua
+        // sendo entregue: quem espera aprovacao tem direito de ver quantos
+        // anuncios mantem no ar.
+        return bloqueioDe(user)
+            .map(estado -> saldo.bloqueadaPor("EMPRESA_" + estado.name()))
+            .orElse(saldo);
+    }
+
+    /**
+     * O que impede esta conta de publicar agora, se e que algo impede.
+     *
+     * Uma fonte so para o portao e para o aviso: a tela pergunta por aqui e o
+     * `create` recusa por aqui, entao os dois nunca discordam. Empresa que nem
+     * chegou a existir conta como NAO_ENVIADO -- ausencia de dossie e o mesmo
+     * que dossie nao enviado, e um ramo a parte diria a mesma coisa duas vezes.
+     */
+    private Optional<AnalysisStatus> bloqueioDe(User user) {
+        if (user.getAccountType() != AccountType.PJ) {
+            return Optional.empty();
+        }
+
+        AnalysisStatus estado = companyRepository.findByUserId(user.getId())
+            .map(Company::getAnalysisStatus)
+            .orElse(AnalysisStatus.NAO_ENVIADO);
+
+        return estado == AnalysisStatus.APROVADA ? Optional.empty() : Optional.of(estado);
+    }
+
+    /**
+     * Empresa sem aprovacao nao publica.
+     *
+     * Ate a spec 28 nada consultava a analise na hora de anunciar: a fila do
+     * backoffice existia, aprovava e reprovava, e nao mandava em nada -- a
+     * empresa publicava igual no dia seguinte ao "reprovada".
+     */
+    private void ensurePodePublicar(User user) {
+        bloqueioDe(user).ifPresent(estado -> {
+            // A mensagem nomeia o estado: "nao autorizado" mandaria a pessoa
+            // procurar problema de login, que nao e o caso.
+            throw new PublicacaoBloqueadaException(
+                "Cadastro da empresa em \"%s\". A publicação é liberada após a aprovação."
+                    .formatted(estado.getDescription())
+            );
+        });
     }
 
     /** So a pessoa fisica tem teto hoje; PJ dependera do plano contratado. */
@@ -159,6 +210,9 @@ public class AnnouncementService {
         Announcement anuncio = doDono(id, email);
 
         if (!anuncio.isActive()) {
+            // Voltar ao ar e publicar: o mesmo portao, senao a empresa sem
+            // aprovacao publicaria inativando antes e reativando depois.
+            ensurePodePublicar(anuncio.getUser());
             ensureQuota(anuncio.getUser());
         }
 

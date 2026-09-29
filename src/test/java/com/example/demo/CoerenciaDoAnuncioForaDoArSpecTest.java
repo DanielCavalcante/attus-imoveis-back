@@ -60,6 +60,8 @@ class CoerenciaDoAnuncioForaDoArSpecTest extends PostgresIntegrationTest {
 
         dono = cadastrar("PJ");
         visitante = cadastrar("PF");
+
+        aprovarEmpresa(dono);
     }
 
     // ---------- C1 a C3: favoritos ----------

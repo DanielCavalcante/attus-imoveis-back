@@ -15,6 +15,7 @@ import org.springframework.security.access.AccessDeniedException;
 
 import com.example.demo.exceptions.custom.BusinessException;
 import com.example.demo.exceptions.custom.ConflictException;
+import com.example.demo.exceptions.custom.PublicacaoBloqueadaException;
 import com.example.demo.exceptions.custom.ResourceNotFoundException;
 import com.example.demo.exceptions.models.ApiError;
 
@@ -70,6 +71,17 @@ public class GlobalExceptionHandler {
         ApiError error = new ApiError(HttpStatus.CONFLICT.value(), ex.getMessage(), LocalDateTime.now());
 
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
+    /**
+     * 403 e nao 409: nao falta vaga, falta liberacao. Inativar anuncio nao
+     * destrancaria nada, e um 409 mandaria a pessoa tentar exatamente isso.
+     */
+    @ExceptionHandler(PublicacaoBloqueadaException.class)
+    public ResponseEntity<ApiError> handlePublicacaoBloqueada(PublicacaoBloqueadaException ex) {
+        ApiError error = new ApiError(HttpStatus.FORBIDDEN.value(), ex.getMessage(), LocalDateTime.now());
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
 
     /** A mensagem nomeia o campo reprovado: sem isso quem consome nao sabe o que corrigir. */

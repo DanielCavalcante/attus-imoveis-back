@@ -26,4 +26,24 @@ public abstract class PostgresIntegrationTest {
         registry.add("spring.datasource.username", POSTGRES::getUsername);
         registry.add("spring.datasource.password", POSTGRES::getPassword);
     }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.example.demo.repositories.CompanyRepository empresasDoTeste;
+
+    /**
+     * Aprova a empresa desta conta, para que ela possa anunciar.
+     *
+     * Desde a spec 28 publicar exige analise aprovada, e uma PJ recem-cadastrada
+     * nasce em NAO_ENVIADO. Suite que anuncia como PJ declara essa pre-condicao
+     * aqui, no preparo -- e quem le o teste ve que ela existe, em vez de a
+     * publicacao funcionar por acidente de um portao que nao checava nada.
+     *
+     * Conta PF nao tem empresa, e chamar isto para ela nao faz nada.
+     */
+    protected void aprovarEmpresa(String email) {
+        empresasDoTeste.findByUserEmail(email).ifPresent(empresa -> {
+            empresa.setAnalysisStatus(com.example.demo.enums.AnalysisStatus.APROVADA);
+            empresasDoTeste.saveAndFlush(empresa);
+        });
+    }
 }

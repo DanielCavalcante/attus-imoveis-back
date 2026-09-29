@@ -293,6 +293,10 @@ class QuotaMensalDaPfSpecTest extends PostgresIntegrationTest {
                     """.formatted(email, telefoneUnico(), tipo, cnpj)))
             .andExpect(status().isCreated());
 
+        // Desde a spec 28 a PJ so anuncia com a analise aprovada; esta suite
+        // mede quota, nao aprovacao, e o portao anterior a ela fica destrancado.
+        aprovarEmpresa(email);
+
         return email;
     }
 
