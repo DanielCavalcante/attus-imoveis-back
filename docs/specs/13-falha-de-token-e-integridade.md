@@ -6,17 +6,19 @@ Token ruim deixa de derrubar rota pública e de encher o log com rastro de pilha
 ## Depende de
 11-correcoes-de-seguranca
 
+> **Aprovada no gate humano em 2026-09-29.** Todos os critérios aceitos.
+
 ## Critérios
-- [ ] **C1** `contrato-api` — `GET /api/v1/announcements` com token malformado no cabeçalho responde 200.
-- [ ] **C2** `contrato-api` — `GET /api/v1/announcements` com token expirado no cabeçalho responde 200.
-- [ ] **C3** `seguranca` — `GET /api/v1/announcements/me` com token malformado responde 403.
-- [ ] **C4** `seguranca` — `GET /api/v1/announcements/me` com assinatura inválida responde 403.
-- [ ] **C5** `seguranca` — `GET /api/v1/announcements/me` com token expirado responde 403.
-- [ ] **C6** `seguranca` — `GET /api/v1/announcements/me` com token de conta removida do banco responde 403.
-- [ ] **C7** `seguranca` — Token válido de conta existente continua autenticando.
-- [ ] **C8** `observabilidade` — Requisição com token inválido não produz registro de nível `ERROR`.
-- [ ] **C9** `contrato-api` — `DataIntegrityViolationException` responde 409.
-- [ ] **C10** `seguranca` — A resposta 409 de integridade não contém o texto da exceção do banco.
+- [x] **C1** `contrato-api` — `GET /api/v1/announcements` com token malformado no cabeçalho responde 200.
+- [x] **C2** `contrato-api` — `GET /api/v1/announcements` com token expirado no cabeçalho responde 200.
+- [x] **C3** `seguranca` — `GET /api/v1/announcements/me` com token malformado responde 403.
+- [x] **C4** `seguranca` — `GET /api/v1/announcements/me` com assinatura inválida responde 403.
+- [x] **C5** `seguranca` — `GET /api/v1/announcements/me` com token expirado responde 403.
+- [x] **C6** `seguranca` — `GET /api/v1/announcements/me` com token de conta removida do banco responde 403.
+- [x] **C7** `seguranca` — Token válido de conta existente continua autenticando.
+- [x] **C8** `observabilidade` — Requisição com token inválido não produz registro de nível `ERROR`.
+- [x] **C9** `contrato-api` — `DataIntegrityViolationException` responde 409.
+- [x] **C10** `seguranca` — A resposta 409 de integridade não contém o texto da exceção do banco.
 
 ## Contrato técnico
 - **O filtro JWT não deixa exceção escapar.** `MalformedJwtException`, `ExpiredJwtException`, `SignatureException` e `UsernameNotFoundException` viram "esta requisição não tem sessão": o filtro segue a cadeia sem autenticar. Quem decide o que fazer com isso é o `SecurityConfig` — rota pública passa, rota protegida responde 403.

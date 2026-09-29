@@ -6,19 +6,21 @@ As filas do backoffice passam a ter ordem de atendimento e tamanho previsível, 
 ## Depende de
 09-apoio-de-venda
 
+> **Aprovada no gate humano em 2026-09-29.** Todos os critérios aceitos.
+
 ## Critérios
-- [ ] **C1** `contrato-api` — `GET /api/v1/backoffice/companies` aceita `page` e `size`.
-- [ ] **C2** `contrato-api` — A resposta da fila de empresas traz o total de elementos.
-- [ ] **C3** `dominio` — Com três empresas na fila e `size=2`, a primeira página traz duas.
-- [ ] **C4** `dominio` — Com três empresas na fila e `size=2`, a segunda página traz a restante.
-- [ ] **C5** `dominio` — A fila de empresas vem da mais antiga para a mais nova.
-- [ ] **C6** `contrato-api` — `GET /api/v1/backoffice/support` aceita `page` e `size`.
-- [ ] **C7** `dominio` — A fila de apoio vem da mais antiga para a mais nova.
-- [ ] **C8** `performance` — A fila de apoio com cinco pedidos é montada com no máximo três consultas ao banco.
-- [ ] **C9** `dominio` — A carga de contas seleciona apenas contas sem tipo.
-- [ ] **C10** `performance` — A carga com cinco contas tipadas e uma sem tipo carrega uma linha.
-- [ ] **C11** `performance` — Carregar uma conta pelo e-mail dispara no máximo uma consulta.
-- [ ] **C12** `persistencia` — Remover a conta remove a empresa dela.
+- [x] **C1** `contrato-api` — `GET /api/v1/backoffice/companies` aceita `page` e `size`.
+- [x] **C2** `contrato-api` — A resposta da fila de empresas traz o total de elementos.
+- [x] **C3** `dominio` — Com três empresas na fila e `size=2`, a primeira página traz duas.
+- [x] **C4** `dominio` — Com três empresas na fila e `size=2`, a segunda página traz a restante.
+- [x] **C5** `dominio` — A fila de empresas vem da mais antiga para a mais nova.
+- [x] **C6** `contrato-api` — `GET /api/v1/backoffice/support` aceita `page` e `size`.
+- [x] **C7** `dominio` — A fila de apoio vem da mais antiga para a mais nova.
+- [x] **C8** `performance` — A fila de apoio com cinco pedidos é montada com no máximo três consultas ao banco.
+- [x] **C9** `dominio` — A carga de contas seleciona apenas contas sem tipo.
+- [x] **C10** `performance` — A carga com cinco contas tipadas e uma sem tipo carrega uma linha.
+- [x] **C11** `performance` — Carregar uma conta pelo e-mail dispara no máximo uma consulta.
+- [x] **C12** `persistencia` — Remover a conta remove a empresa dela.
 
 ## Contrato técnico
 - **Ordem de atendimento é da mais antiga para a mais nova.** Duas imobiliárias esperando e ninguém sabendo quem chegou primeiro é o defeito que a homologação apontou. A fila de empresas ordena por `id` crescente, porque `Company` não tem instante de criação; a de apoio ordena por `createdAt`.

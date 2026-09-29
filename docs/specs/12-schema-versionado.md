@@ -6,17 +6,19 @@ O schema do banco passa a ser um arquivo versionado, reproduzível e revisável 
 ## Depende de
 11-correcoes-de-seguranca
 
+> **Aprovada no gate humano em 2026-09-29.** Todos os critérios aceitos.
+
 ## Critérios
-- [ ] **C1** `persistencia` — `spring.jpa.hibernate.ddl-auto` vale `validate`.
-- [ ] **C2** `persistencia` — Com banco vazio, a aplicação sobe e a tabela `flyway_schema_history` existe.
-- [ ] **C3** `persistencia` — Após a migração, as sete tabelas do domínio existem.
-- [ ] **C4** `persistencia` — Após a migração, a restrição única do par CRECI existe.
-- [ ] **C5** `persistencia` — Após a migração, a restrição única do par conta/anúncio de favoritos existe.
-- [ ] **C6** `persistencia` — Após a migração, a restrição única do par conta/anúncio de visualizações existe.
-- [ ] **C7** `persistencia` — A aplicação sobe com `validate`, ou seja, o mapeamento JPA confere com o schema da migração.
-- [ ] **C8** `persistencia` — Uma conta gravada e relida atravessa o schema versionado.
-- [ ] **C9** `persistencia` — O histórico do Flyway registra exatamente uma aplicação bem-sucedida da versão 1.
-- [ ] **C10** `persistencia` — Banco já criado por `ddl-auto` é adotado por baseline, sem recriar tabela.
+- [x] **C1** `persistencia` — `spring.jpa.hibernate.ddl-auto` vale `validate`.
+- [x] **C2** `persistencia` — Com banco vazio, a aplicação sobe e a tabela `flyway_schema_history` existe.
+- [x] **C3** `persistencia` — Após a migração, as sete tabelas do domínio existem.
+- [x] **C4** `persistencia` — Após a migração, a restrição única do par CRECI existe.
+- [x] **C5** `persistencia` — Após a migração, a restrição única do par conta/anúncio de favoritos existe.
+- [x] **C6** `persistencia` — Após a migração, a restrição única do par conta/anúncio de visualizações existe.
+- [x] **C7** `persistencia` — A aplicação sobe com `validate`, ou seja, o mapeamento JPA confere com o schema da migração.
+- [x] **C8** `persistencia` — Uma conta gravada e relida atravessa o schema versionado.
+- [x] **C9** `persistencia` — O histórico do Flyway registra exatamente uma aplicação bem-sucedida da versão 1.
+- [x] **C10** `persistencia` — Banco já criado por `ddl-auto` é adotado por baseline, sem recriar tabela.
 
 ## Contrato técnico
 - Flyway, que já vem gerenciado pelo parent do Spring Boot. Com Postgres 16 é preciso também `flyway-database-postgresql`, separado do core desde o Flyway 10.

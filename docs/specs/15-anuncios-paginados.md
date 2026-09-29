@@ -6,21 +6,23 @@ A listagem pública de imóveis, a da conta, os favoritos e o histórico param d
 ## Depende de
 14-paginacao-e-consultas-das-filas
 
+> **Aprovada no gate humano em 2026-09-29.** Todos os critérios aceitos.
+
 ## Critérios
-- [ ] **C1** `contrato-api` — `GET /api/v1/announcements` aceita `page` e `size`.
-- [ ] **C2** `contrato-api` — A resposta da listagem pública traz o total de elementos.
-- [ ] **C3** `dominio` — Com três anúncios e `size=2`, a primeira página traz dois.
-- [ ] **C4** `dominio` — Com três anúncios e `size=2`, a segunda página traz o restante.
-- [ ] **C5** `dominio` — A listagem pública vem do mais recente para o mais antigo.
-- [ ] **C6** `contrato-api` — `GET /api/v1/announcements` sem `page` nem `size` devolve página de tamanho 12.
-- [ ] **C7** `performance` — `size=1000` é reduzido ao teto de 50.
-- [ ] **C8** `performance` — A listagem pública com dez anúncios e `size=5` devolve cinco elementos.
-- [ ] **C9** `seguranca` — A listagem pública paginada continua acessível sem autenticação.
-- [ ] **C10** `contrato-api` — `GET /api/v1/announcements/me` pagina.
-- [ ] **C11** `contrato-api` — `GET /api/v1/announcements/me/favoritos` pagina.
-- [ ] **C12** `contrato-api` — `GET /api/v1/announcements/me/historico` pagina.
-- [ ] **C13** `dominio` — O histórico paginado mantém a ordem do mais recente para o mais antigo.
-- [ ] **C14** `dominio` — Favorito de outra conta continua fora da página desta.
+- [x] **C1** `contrato-api` — `GET /api/v1/announcements` aceita `page` e `size`.
+- [x] **C2** `contrato-api` — A resposta da listagem pública traz o total de elementos.
+- [x] **C3** `dominio` — Com três anúncios e `size=2`, a primeira página traz dois.
+- [x] **C4** `dominio` — Com três anúncios e `size=2`, a segunda página traz o restante.
+- [x] **C5** `dominio` — A listagem pública vem do mais recente para o mais antigo.
+- [x] **C6** `contrato-api` — `GET /api/v1/announcements` sem `page` nem `size` devolve página de tamanho 12.
+- [x] **C7** `performance` — `size=1000` é reduzido ao teto de 50.
+- [x] **C8** `performance` — A listagem pública com dez anúncios e `size=5` devolve cinco elementos.
+- [x] **C9** `seguranca` — A listagem pública paginada continua acessível sem autenticação.
+- [x] **C10** `contrato-api` — `GET /api/v1/announcements/me` pagina.
+- [x] **C11** `contrato-api` — `GET /api/v1/announcements/me/favoritos` pagina.
+- [x] **C12** `contrato-api` — `GET /api/v1/announcements/me/historico` pagina.
+- [x] **C13** `dominio` — O histórico paginado mantém a ordem do mais recente para o mais antigo.
+- [x] **C14** `dominio` — Favorito de outra conta continua fora da página desta.
 
 ## Contrato técnico
 - **O teto de página é a parte que importa.** Paginar sem limitar `size` não protege nada: `?size=1000000` volta a carregar a tabela. `spring.data.web.pageable.max-page-size=50` fecha a porta, e o Spring reduz silenciosamente em vez de recusar — quem pede demais recebe o teto, não um erro.
