@@ -118,13 +118,13 @@ public class AnnouncementController {
         @PathVariable @NonNull Long id,
         @AuthenticationPrincipal UserDetails userDetails
     ) {
-        AnnouncementDetailDTO detail = announcementService.findOne(id);
+        // Rota publica: sem sessao o principal chega nulo. O e-mail vai ao
+        // servico porque anuncio fora do ar so o dono ve.
+        String email = userDetails == null ? null : userDetails.getUsername();
 
-        // Rota publica: sem sessao o principal chega nulo e nada e gravado.
-        userLibraryService.registerView(
-            id,
-            userDetails == null ? null : userDetails.getUsername()
-        );
+        AnnouncementDetailDTO detail = announcementService.findOne(id, email);
+
+        userLibraryService.registerView(id, email);
 
         return ResponseEntity.ok(detail);
     }
@@ -191,10 +191,45 @@ public class AnnouncementController {
         return ResponseEntity.ok(announcementService.edit(id, dto, userDetails.getUsername()));
     }
 
-    // @DeleteMapping("/{id}")
-    // public void delete(@PathVariable Long id) {
-    //     service.delete(id);
-    // }
+    /**
+     * As tres rotas nascem com dono verificado.
+     *
+     * Existia aqui um @DeleteMapping comentado chamando service.delete(id)
+     * sem o e-mail da sessao: descomentado, seria qualquer conta apagando
+     * anuncio de qualquer outra.
+     */
+    @Operation(summary = "Tira o anúncio do ar, devolvendo a vaga da quota")
+    @PatchMapping("/{id}/inativar")
+    public ResponseEntity<Void> inativar(
+        @PathVariable @NonNull Long id,
+        @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        announcementService.inativar(id, userDetails.getUsername());
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Devolve o anúncio ao ar, se houver vaga")
+    @PatchMapping("/{id}/reativar")
+    public ResponseEntity<Void> reativar(
+        @PathVariable @NonNull Long id,
+        @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        announcementService.reativar(id, userDetails.getUsername());
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Exclui o anúncio definitivamente")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> excluir(
+        @PathVariable @NonNull Long id,
+        @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        announcementService.excluir(id, userDetails.getUsername());
+
+        return ResponseEntity.noContent().build();
+    }
 
     @Operation(summary = "Saldo de anuncios do mes da conta autenticada")
     @GetMapping("/me/quota")

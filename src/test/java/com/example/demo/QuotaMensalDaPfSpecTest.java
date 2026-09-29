@@ -118,8 +118,16 @@ class QuotaMensalDaPfSpecTest extends PostgresIntegrationTest {
 
     // ---------- C6 ----------
 
+    /**
+     * C6 foi substituido pela spec 22, e este teste guarda a substituicao.
+     *
+     * Enquanto a quota contava criacoes do mes, envelhecer os anuncios abria
+     * vaga. Contando anuncios no ar, idade deixou de importar: o que devolve
+     * vaga e inativar ou excluir. Manter o teste antigo verde exigiria manter
+     * as duas regras ao mesmo tempo, que e o que a spec 22 recusa.
+     */
     @Test
-    @DisplayName("C6 - anuncio de mes anterior nao conta para a quota do mes")
+    @DisplayName("C6 (substituido pela spec 22) - idade nao abre vaga; inativar abre")
     void c6() throws Exception {
         String email = cadastrar("PF");
 
@@ -128,6 +136,15 @@ class QuotaMensalDaPfSpecTest extends PostgresIntegrationTest {
         }
 
         envelhecerAnunciosDe(email);
+
+        criarAnuncio(email).andExpect(status().isConflict());
+
+        Long id = announcementRepository.findByUserEmail(email).get(0).getId();
+
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                .patch("/api/v1/announcements/{id}/inativar", id)
+                .header("Authorization", "Bearer " + tokenDe(email)))
+            .andExpect(status().isNoContent());
 
         criarAnuncio(email).andExpect(status().isOk());
     }

@@ -39,8 +39,8 @@ public class AnnouncementService {
     private final com.example.demo.integracoes.ConsultaDeCep consultaDeCep;
 
     /** Regra de negocio em propriedade: mudar o limite nao pode exigir deploy de codigo. */
-    @Value("${attus.quota.pf.mensal:3}")
-    private int limiteMensalPf;
+    @Value("${attus.quota.pf.ativos:3}")
+    private int limiteDeAtivosPf;
 
     /**
      * Acervo publico: termo e filtros numa consulta so.
@@ -96,44 +96,85 @@ public class AnnouncementService {
         entity.setNeighborhood(consultaDeCep.bairroDe(cep).orElse(null));
     }
 
+    /**
+     * Saldo da conta, contando anuncios no ar.
+     *
+     * Contar e de todo mundo; limitar e que varia. Antes a contagem vivia
+     * dentro do ramo da pessoa fisica e a PJ nao tinha saldo nenhum -- tinha
+     * ausencia de assunto. Agora a PJ ve quantos mantem no ar; o que ela nao
+     * tem e teto, porque nada liga empresa a plano ainda.
+     */
     @Transactional(readOnly = true)
     public AnnouncementQuotaDTO quotaOf(String email) {
         User user = userRepository.findByEmail(email)
             .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
 
-        if (!hasQuota(user)) {
-            return AnnouncementQuotaDTO.semLimite();
-        }
+        long ativos = ativosDe(email);
 
-        return AnnouncementQuotaDTO.de(limiteMensalPf, usedThisMonth(email));
+        return temTeto(user)
+            ? AnnouncementQuotaDTO.de(limiteDeAtivosPf, ativos)
+            : AnnouncementQuotaDTO.semLimite(ativos);
     }
 
-    /** So a pessoa fisica tem quota gratuita; PJ publica conforme plano. */
-    private boolean hasQuota(User user) {
+    /** So a pessoa fisica tem teto hoje; PJ dependera do plano contratado. */
+    private boolean temTeto(User user) {
         return user.getAccountType() == AccountType.PF;
     }
 
     private void ensureQuota(User user) {
-        if (!hasQuota(user)) {
+        if (!temTeto(user)) {
             return;
         }
 
-        long usados = usedThisMonth(user.getEmail());
-
-        if (usados >= limiteMensalPf) {
-            // 409 e nao 403: o pedido e legitimo e a conta pode publicar,
-            // o que falta e saldo do mes.
+        if (ativosDe(user.getEmail()) >= limiteDeAtivosPf) {
+            // 409 e nao 403: o pedido e legitimo e a conta pode publicar, o que
+            // falta e vaga -- e vaga se abre inativando ou excluindo.
             throw new ConflictException(
-                "Limite de %d anuncios no mes atingido".formatted(limiteMensalPf)
+                "Limite de %d anuncios no ar atingido".formatted(limiteDeAtivosPf)
             );
         }
     }
 
-    /** Mes civil, nao janela de trinta dias: "tres por mes" e o que foi combinado. */
-    private long usedThisMonth(String email) {
-        LocalDateTime inicioDoMes = LocalDate.now().withDayOfMonth(1).atStartOfDay();
+    /** No ar agora, nao criados no mes: inativar e excluir devolvem a vaga. */
+    private long ativosDe(String email) {
+        return repository.countByUserEmailAndActiveTrue(email);
+    }
 
-        return repository.countByUserEmailAndCreatedAtGreaterThanEqual(email, inicioDoMes);
+    @Transactional
+    public void inativar(@NonNull Long id, String email) {
+        Announcement anuncio = doDono(id, email);
+
+        anuncio.setActive(false);
+        repository.save(anuncio);
+    }
+
+    @Transactional
+    public void reativar(@NonNull Long id, String email) {
+        Announcement anuncio = doDono(id, email);
+
+        if (!anuncio.isActive()) {
+            ensureQuota(anuncio.getUser());
+        }
+
+        anuncio.setActive(true);
+        repository.save(anuncio);
+    }
+
+    @Transactional
+    public void excluir(@NonNull Long id, String email) {
+        repository.delete(doDono(id, email));
+    }
+
+    /**
+     * Carrega o anuncio exigindo que ele seja de quem pediu.
+     *
+     * 404 e nao 403 para quem nao e dono: responder "existe, mas nao e seu"
+     * conta ao curioso que aquele id existe.
+     */
+    private Announcement doDono(@NonNull Long id, String email) {
+        return repository.findById(id)
+            .filter(anuncio -> anuncio.getUser().getEmail().equals(email))
+            .orElseThrow(() -> new ResourceNotFoundException("Anúncio não encontrado"));
     }
 
     @SuppressWarnings("null")
@@ -168,9 +209,23 @@ public class AnnouncementService {
         return repository.findByUserEmail(email, pageable).map(AnnouncementListDTO::fromEntity);
     }
 
+    /**
+     * Detalhe do anuncio. Fora do ar, so o dono ve.
+     *
+     * Link antigo de anuncio inativado nao pode continuar servindo a pagina
+     * como se nada tivesse mudado; 404 e nao 403 pelo mesmo motivo de doDono.
+     */
     @Transactional(readOnly = true)
-    public AnnouncementDetailDTO findOne(@NonNull Long id) {
-        Announcement announcement = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Anúncio não encontrado com id: " + id));
+    public AnnouncementDetailDTO findOne(@NonNull Long id, String email) {
+        Announcement announcement = repository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Anúncio não encontrado com id: " + id));
+
+        boolean ehDono = email != null && announcement.getUser().getEmail().equals(email);
+
+        if (!announcement.isActive() && !ehDono) {
+            throw new ResourceNotFoundException("Anúncio não encontrado com id: " + id);
+        }
+
         return mapper.toDetailDTO(announcement);
     }
 

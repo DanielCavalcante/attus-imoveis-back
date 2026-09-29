@@ -20,7 +20,7 @@ import com.example.demo.support.PostgresIntegrationTest;
  * Cobre C9 da spec 06. Em classe propria porque o limite chega por propriedade,
  * e provar que ele vem da configuracao exige um contexto com outro valor.
  */
-@TestPropertySource(properties = "attus.quota.pf.mensal=1")
+@TestPropertySource(properties = "attus.quota.pf.ativos=1")
 class QuotaConfiguravelSpecTest extends PostgresIntegrationTest {
 
     private static final AtomicLong SEQUENCIA = new AtomicLong(90000);
@@ -35,7 +35,7 @@ class QuotaConfiguravelSpecTest extends PostgresIntegrationTest {
     private JwtService jwtService;
 
     @Test
-    @DisplayName("C9 - com o limite em 1, a PF e recusada no segundo anuncio")
+    @DisplayName("C9 - com o limite de ativos em 1, a PF e recusada no segundo anuncio")
     void c9() throws Exception {
         String email = cadastrarPf();
 

@@ -156,6 +156,24 @@ public class Announcement {
     @Column(name = "neighborhood_search", length = 60)
     private String neighborhoodSearch;
 
+    /**
+     * No ar ou fora do ar. Nasce ativo.
+     *
+     * Fora do ar o anuncio some do acervo publico e devolve a vaga da quota,
+     * mas continua existindo para o dono -- e o caso de quem vendeu e pode
+     * voltar a vender.
+     */
+    @Column(nullable = false)
+    private boolean active = true;
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 

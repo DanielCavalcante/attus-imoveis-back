@@ -47,7 +47,8 @@ public interface AnnouncementRepository extends JpaRepository<Announcement, Long
      */
     @Query("""
         select a from Announcement a
-        where (:termo = '' or a.searchText like concat('%', :termo, '%'))
+        where a.active = true
+          and (:termo = '' or a.searchText like concat('%', :termo, '%'))
           and (:cidade = '' or a.citySearch = :cidade)
           and (:bairro = '' or a.neighborhoodSearch = :bairro)
           and (:precoMinimo is null or a.price >= :precoMinimo)
@@ -72,14 +73,22 @@ public interface AnnouncementRepository extends JpaRepository<Announcement, Long
      */
     @Query("""
         select distinct a.neighborhood from Announcement a
-        where a.citySearch = :cidade and a.neighborhood is not null
+        where a.active = true and a.citySearch = :cidade and a.neighborhood is not null
         order by a.neighborhood
         """)
     List<String> bairrosDe(@Param("cidade") String cidade);
 
     /** Mesma regra da lista de bairros, um nivel acima. */
-    @Query("select distinct a.city from Announcement a order by a.city")
+    @Query("select distinct a.city from Announcement a where a.active = true order by a.city")
     List<String> cidades();
+
+    /**
+     * Saldo da conta: conta anuncios no ar, nao criados no mes.
+     *
+     * Vale para qualquer tipo de conta. O que depende do tipo e o teto, nao a
+     * contagem -- ver AnnouncementService.quotaOf.
+     */
+    long countByUserEmailAndActiveTrue(String email);
 
     /** Alvo da carga unica: anuncio publicado antes de o bairro existir. */
     List<Announcement> findByNeighborhoodIsNull();

@@ -1,8 +1,11 @@
 package com.example.demo.dtos;
 
 /**
- * Saldo de publicacao do mes corrente. Conta sem limite (PJ) devolve
- * ilimitado = true e os demais campos nulos, em vez de um numero inventado.
+ * Saldo de anuncios no ar.
+ *
+ * Conta sem teto tem saldo, nao tem limite: devolve quantos mantem no ar e
+ * deixa `limite` e `restantes` nulos, em vez de um numero inventado. Contar e
+ * de todo mundo; limitar e que varia por tipo de conta.
  */
 public record AnnouncementQuotaDTO(
     boolean ilimitado,
@@ -11,8 +14,8 @@ public record AnnouncementQuotaDTO(
     Long restantes
 ) {
 
-    public static AnnouncementQuotaDTO semLimite() {
-        return new AnnouncementQuotaDTO(true, null, null, null);
+    public static AnnouncementQuotaDTO semLimite(long usados) {
+        return new AnnouncementQuotaDTO(true, null, usados, null);
     }
 
     public static AnnouncementQuotaDTO de(int limite, long usados) {

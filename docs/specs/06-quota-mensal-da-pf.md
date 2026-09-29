@@ -14,7 +14,7 @@ A pessoa física publica até três anúncios por mês sem pagar, e sabe quantos
 - [x] **C3** `dominio` — Conta `PF` com três anúncios no mês é recusada ao criar o quarto.
 - [x] **C4** `contrato-api` — A recusa por quota responde 409.
 - [x] **C5** `persistencia` — Anúncio recusado por quota não é gravado.
-- [x] **C6** `dominio` — Anúncio criado em mês anterior não conta para a quota do mês corrente.
+- [x] **C6** `dominio` — ~~Anúncio criado em mês anterior não conta para a quota do mês corrente.~~ **Substituído pela spec 22 em 2026-09-29:** a quota passou a contar anúncios no ar, e idade deixou de abrir vaga — quem abre vaga é inativar ou excluir.
 - [x] **C7** `dominio` — Anúncio de outra conta não conta para a quota desta.
 - [x] **C8** `dominio` — Conta `PJ` com três anúncios no mês cria o quarto com sucesso.
 - [x] **C9** `dominio` — Com o limite configurado em 1, a conta `PF` é recusada ao criar o segundo anúncio.
