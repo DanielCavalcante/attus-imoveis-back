@@ -293,6 +293,30 @@ class VinculoDePlanoSpecTest extends PostgresIntegrationTest {
         assertThat(subscriptionRepository.findByCompanyIdAndVigenteTrue(empresaId)).isEmpty();
     }
 
+    // ---------- apoio da tela da spec 31 ----------
+
+    @Test
+    @DisplayName("a listagem traz empresa aprovada, com plano ou sem ele")
+    void listagemDeEmpresasAprovadas() throws Exception {
+        mockMvc.perform(get("/api/v1/backoffice/companies/planos")
+                .header("Authorization", "Bearer " + tokenDe(interno)))
+            .andExpect(status().isOk())
+            // Aprovada e ainda sem plano precisa aparecer: e o caso que a tela
+            // existe para resolver.
+            .andExpect(jsonPath("$.content[?(@.companyId == %d)].planoNome".formatted(empresaId))
+                .value(org.hamcrest.Matchers.contains(org.hamcrest.Matchers.nullValue())));
+
+        liberar(empresaId, planoDeDois).andExpect(status().isOk());
+        publicar(empresa).andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/backoffice/companies/planos")
+                .header("Authorization", "Bearer " + tokenDe(interno)))
+            .andExpect(jsonPath("$.content[?(@.companyId == %d)].planoNome".formatted(empresaId))
+                .value(org.hamcrest.Matchers.contains("Dois anuncios")))
+            .andExpect(jsonPath("$.content[?(@.companyId == %d)].anunciosNoAr".formatted(empresaId))
+                .value(org.hamcrest.Matchers.contains(1)));
+    }
+
     // ---------- apoio ----------
 
     private ResultActions liberar(Long companyId, Long planId) throws Exception {

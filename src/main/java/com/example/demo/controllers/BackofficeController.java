@@ -25,6 +25,7 @@ import com.example.demo.dtos.CompanyRejectionDTO;
 import com.example.demo.dtos.PlanCreateDTO;
 import com.example.demo.dtos.PlanDTO;
 import com.example.demo.dtos.PlanUpdateDTO;
+import com.example.demo.dtos.CompanyPlanListDTO;
 import com.example.demo.dtos.ImpactoDoPlanoDTO;
 import com.example.demo.dtos.LiberacaoDePlanoDTO;
 import com.example.demo.dtos.SubscriptionDTO;
@@ -134,6 +135,14 @@ public class BackofficeController {
     @PostMapping("/plans/{id}/desativar")
     public ResponseEntity<PlanDTO> deactivatePlan(@PathVariable Long id) {
         return ResponseEntity.ok(planService.deactivate(id));
+    }
+
+    @Operation(summary = "Empresas aprovadas, com o plano vigente de cada uma")
+    @GetMapping("/companies/planos")
+    public ResponseEntity<Page<CompanyPlanListDTO>> empresasComPlano(
+        @PageableDefault(size = 20, sort = "id", direction = Sort.Direction.ASC) Pageable pageable
+    ) {
+        return ResponseEntity.ok(subscriptionService.empresasAprovadas(pageable));
     }
 
     /**

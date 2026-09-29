@@ -78,6 +78,14 @@ public class SubscriptionService {
         return SubscriptionDTO.fromEntity(repository.save(nova));
     }
 
+    /** A tela de liberacao: empresas aprovadas, plano vigente e acervo no ar. */
+    @Transactional(readOnly = true)
+    public org.springframework.data.domain.Page<com.example.demo.dtos.CompanyPlanListDTO>
+        empresasAprovadas(org.springframework.data.domain.Pageable pageable) {
+
+        return repository.empresasAprovadas(pageable);
+    }
+
     /** O plano vigente da empresa, se houver. */
     @Transactional(readOnly = true)
     public Optional<SubscriptionDTO> vigenteDe(Long companyId) {
