@@ -31,8 +31,15 @@ public record AnnouncementCreateDTO(
     @Size(max = 80)
     String street,
 
-    @NotBlank(message = "O link da imagem do anúncio é obrigatório")
-    @Size(max = 244, message = "O link da imagem deve ter no máximo 244 carateres")
+    @NotBlank(message = "A imagem do anúncio é obrigatória")
+    @Size(max = 244, message = "A referência da imagem deve ter no máximo 244 caracteres")
+    // E isto que faz a mudanca ser seguranca, e nao interface: sem recusar o
+    // endereco externo aqui, bastaria nao usar a tela para voltar a apontar
+    // para qualquer host. A imagem tem de ter sido enviada para o bucket.
+    @Pattern(
+        regexp = "^(?!\s*https?://).*",
+        message = "A imagem deve ser enviada, e não um endereço externo"
+    )
     String image,
 
     @NotNull(message = "Número é obrigatório")

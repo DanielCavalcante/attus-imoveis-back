@@ -49,6 +49,9 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/announcements/me", "/api/v1/announcements/me/**").authenticated()
                 .requestMatchers(HttpMethod.GET, "/api/v1/announcements/*").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/plans").permitAll()
+                // A imagem e publica como o anuncio que ela ilustra; enviar,
+                // nao -- POST cai no authenticated() do final.
+                .requestMatchers(HttpMethod.GET, "/api/v1/imagens/*").permitAll()
                 .requestMatchers("/api/v1/backoffice/**").hasRole("INTERNO")
                 .anyRequest().authenticated()
             )

@@ -246,7 +246,7 @@ class BuscaDeAnunciosSpecTest extends PostgresIntegrationTest {
                     {
                       "title": "%s",
                       "description": "Anuncio da suite",
-                      "image": "https://images.unsplash.com/foto.jpg",
+                      "image": "/api/v1/imagens/foto-de-teste.png",
                       "price": %d,
                       "city": "%s",
                       "state": "%s",

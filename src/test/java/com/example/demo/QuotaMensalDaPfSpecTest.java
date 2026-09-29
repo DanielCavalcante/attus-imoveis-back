@@ -247,7 +247,7 @@ class QuotaMensalDaPfSpecTest extends PostgresIntegrationTest {
                 {
                   "title": "Apartamento de teste %d",
                   "description": "Anuncio criado pela suite",
-                  "image": "https://images.unsplash.com/foto.jpg",
+                  "image": "/api/v1/imagens/foto-de-teste.png",
                   "price": 450000,
                   "city": "Recife",
                   "state": "PE",

@@ -21,6 +21,21 @@ services:
       timeout: 5s
       retries: 10
 
+  # Emulador do Cloud Storage. Fala o mesmo protocolo do GCS, entao a API usa
+  # o mesmo cliente e o mesmo codigo dos dois lados -- so o endereco muda.
+  # `-scheme http` porque em rede de compose nao ha TLS para validar.
+  gcs:
+    image: fsouza/fake-gcs-server
+    container_name: attus-imoveis-gcs
+    restart: always
+    command: ["-scheme", "http", "-port", "4443", "-public-host", "gcs:4443"]
+    ports:
+      - "4443:4443"
+    volumes:
+      # O bucket precisa existir antes do primeiro upload: o emulador cria um
+      # por diretorio que encontrar aqui.
+      - ./dev/gcs/attus-imoveis-dev:/data/attus-imoveis-dev
+
   api:
     build:
       context: .
@@ -29,6 +44,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      gcs:
+        condition: service_started
     environment:
       # Sobrescreve application.properties via relaxed binding do Spring.
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/imoveis-challenge-db
@@ -40,6 +57,10 @@ services:
       ATTUS_BOOTSTRAP_INTERNAL_EMAIL: ${ATTUS_BOOTSTRAP_INTERNAL_EMAIL:-interno@attus.dev}
       ATTUS_BOOTSTRAP_INTERNAL_PASSWORD: ${ATTUS_BOOTSTRAP_INTERNAL_PASSWORD:-InternoDev123}
       ATTUS_BOOTSTRAP_INTERNAL_PHONE: ${ATTUS_BOOTSTRAP_INTERNAL_PHONE:-11900000001}
+      # Em producao ATTUS_IMAGENS_EMULADOR fica vazio e vale a credencial
+      # padrao do ambiente (ADC): nenhuma chave de servico no repositorio.
+      ATTUS_IMAGENS_BUCKET: ${ATTUS_IMAGENS_BUCKET:-attus-imoveis-dev}
+      ATTUS_IMAGENS_EMULADOR: ${ATTUS_IMAGENS_EMULADOR:-http://gcs:4443}
     ports:
       - "8080:8080"
 

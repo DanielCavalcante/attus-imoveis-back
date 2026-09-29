@@ -6,6 +6,8 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import io.aiven.testcontainers.fakegcsserver.FakeGcsServerContainer;
+
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 
 @Testcontainers
@@ -16,8 +18,33 @@ public abstract class PostgresIntegrationTest {
     static final PostgreSQLContainer<?> POSTGRES =
         new PostgreSQLContainer<>("postgres:16");
 
+    /**
+     * O emulador do Cloud Storage, pelo mesmo motivo do Postgres.
+     *
+     * Criterio de armazenamento provado contra um duble em memoria nao prova
+     * nada sobre producao. Com o emulador, o caminho de codigo exercitado aqui
+     * e o mesmo que vai falar com o bucket de verdade.
+     */
+    static final FakeGcsServerContainer GCS = new FakeGcsServerContainer();
+
+    protected static final String BUCKET_DE_TESTE = "attus-imoveis-teste";
+
     static {
         POSTGRES.start();
+        GCS.start();
+
+        criarBucket();
+    }
+
+    /** O emulador nao nasce com bucket, e `create` de objeto num bucket que nao existe falha. */
+    private static void criarBucket() {
+        com.google.cloud.storage.StorageOptions.newBuilder()
+            .setHost(GCS.url())
+            .setProjectId("attus-imoveis-teste")
+            .setCredentials(com.google.cloud.NoCredentials.getInstance())
+            .build()
+            .getService()
+            .create(com.google.cloud.storage.BucketInfo.of(BUCKET_DE_TESTE));
     }
 
     @DynamicPropertySource
@@ -25,6 +52,8 @@ public abstract class PostgresIntegrationTest {
         registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
         registry.add("spring.datasource.username", POSTGRES::getUsername);
         registry.add("spring.datasource.password", POSTGRES::getPassword);
+        registry.add("attus.imagens.emulador", GCS::url);
+        registry.add("attus.imagens.bucket", () -> BUCKET_DE_TESTE);
     }
 
     @org.springframework.beans.factory.annotation.Autowired
