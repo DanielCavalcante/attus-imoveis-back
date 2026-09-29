@@ -177,10 +177,18 @@ public class AnnouncementService {
             .orElseThrow(() -> new ResourceNotFoundException("Anúncio não encontrado"));
     }
 
+    /**
+     * Editar exige ser dono.
+     *
+     * Ate aqui este metodo recebia o e-mail da sessao e nao o usava: fazia
+     * findById e gravava, entao qualquer conta autenticada editava anuncio de
+     * qualquer outra, com a rota no ar. A spec 22 fechou o mesmo padrao em
+     * inativar, reativar e excluir e deixou este de fora por escopo estrito.
+     */
     @SuppressWarnings("null")
     @Transactional
     public AnnouncementDetailDTO edit(@NonNull Long id, AnnouncementUpdateDTO dto, String email) {
-        Announcement entity = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Anúncio não encontrado"));
+        Announcement entity = doDono(id, email);
         mapper.updateEntity(dto, entity);
         resolverBairro(entity, dto.neighborhood(), dto.cep());
         Announcement saved = repository.save(entity);

@@ -44,7 +44,7 @@ public class UserLibraryService {
         Favorite favorite = new Favorite();
 
         favorite.setUser(requireUser(email));
-        favorite.setAnnouncement(requireAnnouncement(announcementId));
+        favorite.setAnnouncement(requireAnnouncementNoAr(announcementId));
 
         favoriteRepository.save(favorite);
     }
@@ -102,6 +102,23 @@ public class UserLibraryService {
 
     private Announcement requireAnnouncement(Long id) {
         return announcementRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Anúncio não encontrado"));
+    }
+
+    /**
+     * Anuncio fora do ar nao e favoritavel.
+     *
+     * Ele ja nao aparece na listagem publica nem no detalhe para quem nao e
+     * dono; aceitar o favorito por chamada direta a API criaria uma entrada que
+     * a propria lista de favoritos nao mostraria.
+     *
+     * A regra e SO do favorito. Posta no requireAnnouncement compartilhado, ela
+     * derrubava o registro de visita -- e o dono, que pode ver o proprio
+     * anuncio fora do ar, recebia 404 ao abrir o detalhe dele.
+     */
+    private Announcement requireAnnouncementNoAr(Long id) {
+        return announcementRepository.findById(id)
+            .filter(Announcement::isActive)
             .orElseThrow(() -> new ResourceNotFoundException("Anúncio não encontrado"));
     }
 }

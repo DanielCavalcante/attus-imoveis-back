@@ -17,13 +17,17 @@ public interface AnnouncementViewRepository extends JpaRepository<AnnouncementVi
 
     Optional<AnnouncementView> findByUserEmailAndAnnouncementId(String email, Long announcementId);
 
+    /** Mesma regra dos favoritos: some da lista, o registro da visita fica. */
     @Query(
         value = """
             select v.announcement from AnnouncementView v
-            where v.user.email = :email
+            where v.user.email = :email and v.announcement.active = true
             order by v.viewedAt desc
             """,
-        countQuery = "select count(v) from AnnouncementView v where v.user.email = :email"
+        countQuery = """
+            select count(v) from AnnouncementView v
+            where v.user.email = :email and v.announcement.active = true
+            """
     )
     Page<Announcement> findAnnouncementsByUserEmail(String email, Pageable pageable);
 }
