@@ -19,7 +19,7 @@ Quem procura imóvel recorta por bairro, e ninguém precisa cadastrar bairro nen
 - [ ] **C8** `dominio` — `neighborhood=manaira` devolve o anúncio cujo bairro é "Manaíra".
 - [ ] **C9** `dominio` — `neighborhood` combinado com `city` devolve apenas anúncios que satisfazem os dois.
 - [ ] **C10** `contrato-api` — Existe rota que lista os bairros de uma cidade.
-- [ ] **C11** `dominio` — Essa lista traz apenas bairros com ao menos um anúncio publicado.
+- [ ] **C11** `dominio` — ~~Essa lista traz apenas bairros com ao menos um anúncio publicado.~~ **Qualificado pela spec 25 em 2026-09-29:** vale onde a cidade não tem catálogo. Cidade com catálogo lista o município inteiro, inclusive bairro sem anúncio.
 - [ ] **C12** `dominio` — Essa lista não repete bairro.
 - [ ] **C13** `dominio` — A rota de cidades traz apenas cidades com ao menos um anúncio publicado.
 - [ ] **C14** `persistencia` — Uma rotina de carga única preenche o bairro dos anúncios já publicados a partir do CEP gravado.

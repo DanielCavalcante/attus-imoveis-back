@@ -6,6 +6,8 @@ A lista de bairros de João Pessoa passa a ser a cidade inteira, e não só os b
 ## Depende de
 19-bairro-derivado-do-cep
 
+> **Aprovada no gate humano em 2026-09-29.** Todos os critérios aceitos.
+
 ## Critérios
 - [ ] **C1** `persistencia` — Existe tabela de bairros por cidade.
 - [ ] **C2** `persistencia` — A migração semeia os bairros de João Pessoa a partir de fonte oficial.

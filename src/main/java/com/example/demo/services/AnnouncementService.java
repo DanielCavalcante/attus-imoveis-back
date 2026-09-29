@@ -37,6 +37,7 @@ public class AnnouncementService {
     private final UserRepository userRepository;
     private final AnnouncementMapper mapper;
     private final com.example.demo.integracoes.ConsultaDeCep consultaDeCep;
+    private final com.example.demo.repositories.NeighborhoodRepository neighborhoodRepository;
 
     /** Regra de negocio em propriedade: mudar o limite nao pode exigir deploy de codigo. */
     @Value("${attus.quota.pf.ativos:3}")
@@ -202,14 +203,27 @@ public class AnnouncementService {
         return repository.cidades();
     }
 
-    /** Idem para bairros, dentro da cidade pedida e ja normalizada. */
+    /**
+     * Os bairros de uma cidade: o catalogo quando existe, o acervo quando nao.
+     *
+     * Com catalogo, a lista e a cidade inteira -- inclusive bairro onde ainda
+     * nao ha imovel, e isso e o ponto: quem procura descobre que o bairro dele
+     * existe no produto, em vez de concluir que o site nao cobre a regiao.
+     *
+     * Sem catalogo vale o distinct sobre os anuncios, que e o que a spec 19
+     * fixou. E o que faz esta mudanca nao quebrar nenhuma outra cidade.
+     */
     @Transactional(readOnly = true)
     public List<String> bairrosDe(String cidade) {
         if (cidade == null || cidade.isBlank()) {
             return List.of();
         }
 
-        return repository.bairrosDe(Announcement.normalizar(cidade.trim()));
+        String normalizada = Announcement.normalizar(cidade.trim());
+
+        List<String> catalogo = neighborhoodRepository.nomesDe(normalizada);
+
+        return catalogo.isEmpty() ? repository.bairrosDe(normalizada) : catalogo;
     }
 
     @Transactional(readOnly = true)

@@ -195,35 +195,45 @@ class BairroDoAnuncioSpecTest extends PostgresIntegrationTest {
 
     // ---------- C10 a C13: as listas ----------
 
+    /*
+     * Estes tres passaram a usar Recife, e a troca tem motivo.
+     *
+     * A spec 25 deu catalogo a Joao Pessoa: a rota daquela cidade agora devolve
+     * os 64 bairros do municipio, nao o distinct sobre os anuncios. O
+     * comportamento que estes criterios descrevem continua vivo -- e o que a
+     * spec 25 garante em C8 -- mas so onde nao ha catalogo. Mantê-los em Joao
+     * Pessoa exigiria manter as duas regras ao mesmo tempo na mesma cidade.
+     */
+
     @Test
     @DisplayName("C10 - existe rota que lista os bairros de uma cidade")
     void c10() throws Exception {
-        criar("Um", "João Pessoa", "58038-000", "Manaíra");
+        criar("Um", "Recife", "50000-000", "Boa Viagem");
 
-        mockMvc.perform(get("/api/v1/announcements/bairros").param("city", "João Pessoa"))
+        mockMvc.perform(get("/api/v1/announcements/bairros").param("city", "Recife"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$[0]").value("Manaíra"));
+            .andExpect(jsonPath("$[0]").value("Boa Viagem"));
     }
 
     @Test
-    @DisplayName("C11 - a lista traz apenas bairros com ao menos um anuncio")
+    @DisplayName("C11 (spec 25) - sem catalogo, a lista traz so bairros com anuncio")
     void c11() throws Exception {
-        criar("Um", "João Pessoa", "58038-000", "Manaíra");
-        criar("Dois", "Recife", "50000-000", "Boa Viagem");
+        criar("Um", "Recife", "50000-000", "Boa Viagem");
+        criar("Dois", "João Pessoa", "58038-000", "Manaíra");
 
-        mockMvc.perform(get("/api/v1/announcements/bairros").param("city", "João Pessoa"))
+        mockMvc.perform(get("/api/v1/announcements/bairros").param("city", "Recife"))
             .andExpect(jsonPath("$.length()").value(1))
-            .andExpect(jsonPath("$[0]").value("Manaíra"));
+            .andExpect(jsonPath("$[0]").value("Boa Viagem"));
     }
 
     @Test
     @DisplayName("C12 - a lista nao repete bairro")
     void c12() throws Exception {
-        criar("Um", "João Pessoa", "58038-000", "Manaíra");
-        criar("Dois", "João Pessoa", "58038-000", "Manaíra");
-        criar("Tres", "João Pessoa", "58038-000", "Bessa");
+        criar("Um", "Recife", "50000-000", "Boa Viagem");
+        criar("Dois", "Recife", "50000-000", "Boa Viagem");
+        criar("Tres", "Recife", "50000-000", "Espinheiro");
 
-        mockMvc.perform(get("/api/v1/announcements/bairros").param("city", "João Pessoa"))
+        mockMvc.perform(get("/api/v1/announcements/bairros").param("city", "Recife"))
             .andExpect(jsonPath("$.length()").value(2));
     }
 
