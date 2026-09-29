@@ -46,6 +46,11 @@ services:
   web:
     build:
       context: ../attus-imoveis-front
+      args:
+        # NEXT_PUBLIC_* e embutido no build, nao lido em runtime: por isso vem
+        # como build arg, e nao em `environment`.
+        NEXT_PUBLIC_CONTATO_EMAIL: ${NEXT_PUBLIC_CONTATO_EMAIL:-contato@encontrei.com.br}
+        NEXT_PUBLIC_CONTATO_TELEFONE: ${NEXT_PUBLIC_CONTATO_TELEFONE:-}
     container_name: attus-imoveis-web
     restart: always
     depends_on:
