@@ -2,7 +2,12 @@ package com.example.demo.services;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -197,10 +202,38 @@ public class AnnouncementService {
         return mapper.toDetailDTO(saved);
     }
 
-    /** A lista e o que existe no acervo; cidade sem anuncio nao aparece. */
+    /**
+     * As cidades oferecidas: as do acervo mais as que tem catalogo de bairros.
+     *
+     * A regra e a mesma de `bairrosDe`, um nivel acima. So o acervo deixava de
+     * fora a cidade em que o produto comeca -- Joao Pessoa tem catalogo e nao
+     * tinha anuncio, entao quem abria o filtro nao achava a propria cidade.
+     *
+     * A juncao e por forma normalizada para "João Pessoa" nao aparecer duas
+     * vezes quando a cidade passar a ter anuncio; quem ja estava na lista
+     * mantem a grafia que o acervo guardou.
+     */
     @Transactional(readOnly = true)
     public List<String> cidades() {
-        return repository.cidades();
+        List<String> doAcervo = repository.cidades();
+
+        Set<String> jaListadas = doAcervo.stream()
+            .map(Announcement::normalizar)
+            .collect(Collectors.toCollection(HashSet::new));
+
+        List<String> todas = new ArrayList<>(doAcervo);
+
+        for (String comCatalogo : neighborhoodRepository.cidades()) {
+            if (jaListadas.add(Announcement.normalizar(comCatalogo))) {
+                todas.add(comCatalogo);
+            }
+        }
+
+        // Pela forma normalizada, pelo mesmo motivo do catalogo de bairros: sob
+        // colacao C o acento joga a cidade acentuada para o fim da lista.
+        todas.sort(Comparator.comparing(Announcement::normalizar));
+
+        return todas;
     }
 
     /**

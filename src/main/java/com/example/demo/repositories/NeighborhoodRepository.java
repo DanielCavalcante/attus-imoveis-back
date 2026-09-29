@@ -29,4 +29,15 @@ public interface NeighborhoodRepository extends JpaRepository<Neighborhood, Long
         order by n.nameSearch
         """)
     List<String> nomesDe(@Param("cidade") String cidade);
+
+    /**
+     * As cidades que tem catalogo, na forma exibida.
+     *
+     * Elas entram na lista de cidades mesmo sem nenhum anuncio: o produto
+     * comeca em Joao Pessoa, e uma lista feita so do `distinct` sobre os
+     * anuncios nao oferecia a cidade do proprio produto. A ordenacao fica com
+     * quem junta as duas fontes.
+     */
+    @Query("select distinct n.city from Neighborhood n")
+    List<String> cidades();
 }

@@ -173,6 +173,32 @@ class CatalogoDeBairrosSpecTest extends PostgresIntegrationTest {
             .andExpect(jsonPath("$.content").isEmpty());
     }
 
+    // ---------- correcao: a lista de cidades tambem olha o catalogo ----------
+
+    @Test
+    @DisplayName("cidade com catalogo e sem anuncio aparece na lista de cidades")
+    void cidadeComCatalogoSemAnuncio() throws Exception {
+        criar("So no Recife", "Recife", "Boa Viagem");
+
+        mockMvc.perform(get("/api/v1/announcements/cidades"))
+            .andExpect(jsonPath("$", org.hamcrest.Matchers.hasItem("João Pessoa")))
+            .andExpect(jsonPath("$", org.hamcrest.Matchers.hasItem("Recife")));
+    }
+
+    @Test
+    @DisplayName("cidade que tem catalogo e anuncio aparece uma vez so")
+    void cidadeComCatalogoEAnuncio() throws Exception {
+        criar("No Manaira", "João Pessoa", "Manaíra");
+
+        String corpo = mockMvc.perform(get("/api/v1/announcements/cidades"))
+            .andExpect(status().isOk())
+            .andReturn()
+            .getResponse()
+            .getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
+
+        assertThat(corpo.split("João Pessoa", -1)).hasSize(2);
+    }
+
     // ---------- apoio ----------
 
     private static org.assertj.core.api.AbstractThrowableAssert<?, ? extends Throwable>

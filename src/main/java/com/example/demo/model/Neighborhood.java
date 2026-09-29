@@ -27,6 +27,16 @@ public class Neighborhood {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /**
+     * A cidade como se escreve -- e o que a lista de cidades oferece na tela.
+     *
+     * Guardada alem da forma normalizada porque normalizar nao tem volta: de
+     * "joao pessoa" ninguem reconstroi "João Pessoa".
+     */
+    @Size(max = 40)
+    @Column(length = 40, nullable = false)
+    private String city;
+
     /** Cidade ja normalizada: e por ela que o catalogo e procurado. */
     @NotBlank
     @Size(max = 40)
@@ -45,12 +55,26 @@ public class Neighborhood {
     @PrePersist
     @PreUpdate
     private void normalizar() {
-        citySearch = Announcement.normalizar(citySearch == null ? "" : citySearch);
+        // Quem so informou a cidade por `setCitySearch` informou a forma
+        // exibida: e dela que sai a normalizada, nunca o contrario.
+        if (city == null || city.isBlank()) {
+            city = citySearch;
+        }
+
+        citySearch = Announcement.normalizar(city == null ? "" : city);
         nameSearch = Announcement.normalizar(name == null ? "" : name);
     }
 
     public Long getId() {
         return id;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
     }
 
     public String getCitySearch() {
