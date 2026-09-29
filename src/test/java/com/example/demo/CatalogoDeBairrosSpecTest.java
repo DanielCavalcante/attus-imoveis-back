@@ -56,7 +56,7 @@ class CatalogoDeBairrosSpecTest extends PostgresIntegrationTest {
         userRepository.deleteAll();
 
         dono = cadastrarPj();
-        aprovarEmpresa(dono);
+        liberarParaAnunciar(dono);
     }
 
     // ---------- C1 a C3: a tabela e a carga ----------

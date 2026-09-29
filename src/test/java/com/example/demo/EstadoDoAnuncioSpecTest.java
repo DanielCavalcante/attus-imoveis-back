@@ -55,8 +55,8 @@ class EstadoDoAnuncioSpecTest extends PostgresIntegrationTest {
         dono = cadastrar("PJ");
         intruso = cadastrar("PJ");
 
-        aprovarEmpresa(dono);
-        aprovarEmpresa(intruso);
+        liberarParaAnunciar(dono);
+        liberarParaAnunciar(intruso);
     }
 
     // ---------- C1: nasce ativo ----------

@@ -48,6 +48,7 @@ public class AnnouncementService {
     private final com.example.demo.integracoes.ConsultaDeCep consultaDeCep;
     private final com.example.demo.repositories.NeighborhoodRepository neighborhoodRepository;
     private final com.example.demo.repositories.CompanyRepository companyRepository;
+    private final com.example.demo.repositories.SubscriptionRepository subscriptionRepository;
 
     /** Regra de negocio em propriedade: mudar o limite nao pode exigir deploy de codigo. */
     @Value("${attus.quota.pf.ativos:3}")
@@ -111,10 +112,9 @@ public class AnnouncementService {
     /**
      * Saldo da conta, contando anuncios no ar.
      *
-     * Contar e de todo mundo; limitar e que varia. Antes a contagem vivia
-     * dentro do ramo da pessoa fisica e a PJ nao tinha saldo nenhum -- tinha
-     * ausencia de assunto. Agora a PJ ve quantos mantem no ar; o que ela nao
-     * tem e teto, porque nada liga empresa a plano ainda.
+     * Contar e de todo mundo; limitar e que varia. A PF tem o teto da spec 06,
+     * em propriedade; a PJ tem o teto do plano vigente (spec 30). Plano sem
+     * limite devolve saldo sem limite, em vez de um numero inventado.
      */
     @Transactional(readOnly = true)
     public AnnouncementQuotaDTO quotaOf(String email) {
@@ -123,73 +123,103 @@ public class AnnouncementService {
 
         long ativos = ativosDe(email);
 
-        AnnouncementQuotaDTO saldo = temTeto(user)
-            ? AnnouncementQuotaDTO.de(limiteDeAtivosPf, ativos)
-            : AnnouncementQuotaDTO.semLimite(ativos);
+        AnnouncementQuotaDTO saldo = limiteDe(user)
+            .map(limite -> AnnouncementQuotaDTO.de(limite, ativos))
+            .orElseGet(() -> AnnouncementQuotaDTO.semLimite(ativos));
 
         // O saldo e verdadeiro mesmo com a publicacao trancada, e continua
         // sendo entregue: quem espera aprovacao tem direito de ver quantos
         // anuncios mantem no ar.
         return bloqueioDe(user)
-            .map(estado -> saldo.bloqueadaPor("EMPRESA_" + estado.name()))
+            .map(bloqueio -> saldo.bloqueadaPor(bloqueio.codigo()))
             .orElse(saldo);
     }
+
+    /** O que tranca a publicacao: o codigo que a tela le, a frase que a pessoa le. */
+    private record Bloqueio(String codigo, String mensagem) {}
 
     /**
      * O que impede esta conta de publicar agora, se e que algo impede.
      *
-     * Uma fonte so para o portao e para o aviso: a tela pergunta por aqui e o
-     * `create` recusa por aqui, entao os dois nunca discordam. Empresa que nem
-     * chegou a existir conta como NAO_ENVIADO -- ausencia de dossie e o mesmo
-     * que dossie nao enviado, e um ramo a parte diria a mesma coisa duas vezes.
+     * Uma fonte so para os portoes e para o aviso: a tela pergunta por aqui e
+     * o `create` recusa por aqui, entao os dois nunca discordam.
+     *
+     * Sao dois portoes em sequencia, e a ordem importa -- empresa reprovada
+     * ouve sobre a reprovacao, nao sobre plano, porque contratar plano nao
+     * resolveria o caso dela.
      */
-    private Optional<AnalysisStatus> bloqueioDe(User user) {
+    private Optional<Bloqueio> bloqueioDe(User user) {
         if (user.getAccountType() != AccountType.PJ) {
             return Optional.empty();
         }
 
+        // Empresa que nem chegou a existir conta como NAO_ENVIADO: ausencia de
+        // dossie e o mesmo que dossie nao enviado, e um ramo a parte diria a
+        // mesma coisa duas vezes.
         AnalysisStatus estado = companyRepository.findByUserId(user.getId())
             .map(Company::getAnalysisStatus)
             .orElse(AnalysisStatus.NAO_ENVIADO);
 
-        return estado == AnalysisStatus.APROVADA ? Optional.empty() : Optional.of(estado);
+        if (estado != AnalysisStatus.APROVADA) {
+            return Optional.of(new Bloqueio(
+                "EMPRESA_" + estado.name(),
+                "Cadastro da empresa em \"%s\". A publicação é liberada após a aprovação."
+                    .formatted(estado.getDescription())
+            ));
+        }
+
+        if (subscriptionRepository.vigenteDe(user.getEmail()).isEmpty()) {
+            return Optional.of(new Bloqueio(
+                "SEM_PLANO",
+                "Nenhum plano ativo nesta conta. Fale com a equipe para liberar um plano."
+            ));
+        }
+
+        return Optional.empty();
     }
 
     /**
-     * Empresa sem aprovacao nao publica.
+     * Empresa sem aprovacao, ou sem plano, nao publica.
      *
      * Ate a spec 28 nada consultava a analise na hora de anunciar: a fila do
      * backoffice existia, aprovava e reprovava, e nao mandava em nada -- a
-     * empresa publicava igual no dia seguinte ao "reprovada".
+     * empresa publicava igual no dia seguinte ao "reprovada". E ate a spec 30
+     * os planos eram catalogo sem assinante.
      */
     private void ensurePodePublicar(User user) {
-        bloqueioDe(user).ifPresent(estado -> {
-            // A mensagem nomeia o estado: "nao autorizado" mandaria a pessoa
+        bloqueioDe(user).ifPresent(bloqueio -> {
+            // A mensagem nomeia a causa: "nao autorizado" mandaria a pessoa
             // procurar problema de login, que nao e o caso.
-            throw new PublicacaoBloqueadaException(
-                "Cadastro da empresa em \"%s\". A publicação é liberada após a aprovação."
-                    .formatted(estado.getDescription())
-            );
+            throw new PublicacaoBloqueadaException(bloqueio.mensagem());
         });
     }
 
-    /** So a pessoa fisica tem teto hoje; PJ dependera do plano contratado. */
-    private boolean temTeto(User user) {
-        return user.getAccountType() == AccountType.PF;
+    /**
+     * O teto de anuncios no ar desta conta, quando ela tem um.
+     *
+     * Vazio significa sem teto, nao teto zero. A PF le a propriedade da spec
+     * 06; a PJ le o limite do plano vigente, e plano de limite nulo e
+     * ilimitado por definicao da spec 07.
+     */
+    private Optional<Integer> limiteDe(User user) {
+        if (user.getAccountType() != AccountType.PJ) {
+            return Optional.of(limiteDeAtivosPf);
+        }
+
+        return subscriptionRepository.vigenteDe(user.getEmail())
+            .map(assinatura -> assinatura.getPlan().getLimiteAnuncios());
     }
 
     private void ensureQuota(User user) {
-        if (!temTeto(user)) {
-            return;
-        }
-
-        if (ativosDe(user.getEmail()) >= limiteDeAtivosPf) {
-            // 409 e nao 403: o pedido e legitimo e a conta pode publicar, o que
-            // falta e vaga -- e vaga se abre inativando ou excluindo.
-            throw new ConflictException(
-                "Limite de %d anuncios no ar atingido".formatted(limiteDeAtivosPf)
-            );
-        }
+        limiteDe(user).ifPresent(limite -> {
+            if (ativosDe(user.getEmail()) >= limite) {
+                // 409 e nao 403: o pedido e legitimo e a conta pode publicar, o
+                // que falta e vaga -- e vaga se abre inativando ou excluindo.
+                throw new ConflictException(
+                    "Limite de %d anuncios no ar atingido".formatted(limite)
+                );
+            }
+        });
     }
 
     /** No ar agora, nao criados no mes: inativar e excluir devolvem a vaga. */

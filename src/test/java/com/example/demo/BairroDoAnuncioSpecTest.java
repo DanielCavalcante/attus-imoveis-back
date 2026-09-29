@@ -97,7 +97,7 @@ class BairroDoAnuncioSpecTest extends PostgresIntegrationTest {
         cep.foraDoAr = false;
 
         dono = cadastrarPj();
-        aprovarEmpresa(dono);
+        liberarParaAnunciar(dono);
     }
 
     // ---------- C1 a C5: derivacao ----------

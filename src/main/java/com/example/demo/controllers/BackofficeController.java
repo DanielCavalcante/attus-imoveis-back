@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.demo.dtos.BackofficeCompanyListDTO;
@@ -24,11 +25,15 @@ import com.example.demo.dtos.CompanyRejectionDTO;
 import com.example.demo.dtos.PlanCreateDTO;
 import com.example.demo.dtos.PlanDTO;
 import com.example.demo.dtos.PlanUpdateDTO;
+import com.example.demo.dtos.ImpactoDoPlanoDTO;
+import com.example.demo.dtos.LiberacaoDePlanoDTO;
+import com.example.demo.dtos.SubscriptionDTO;
 import com.example.demo.dtos.BackofficeSupportListDTO;
 import com.example.demo.dtos.SupportRequestDTO;
 import com.example.demo.services.CompanyService;
 import com.example.demo.services.SupportRequestService;
 import com.example.demo.services.PlanService;
+import com.example.demo.services.SubscriptionService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -48,6 +53,7 @@ public class BackofficeController {
     private final CompanyService companyService;
     private final PlanService planService;
     private final SupportRequestService supportRequestService;
+    private final SubscriptionService subscriptionService;
 
     @Operation(summary = "Confirma acesso interno")
     @GetMapping("/ping")
@@ -128,5 +134,47 @@ public class BackofficeController {
     @PostMapping("/plans/{id}/desativar")
     public ResponseEntity<PlanDTO> deactivatePlan(@PathVariable Long id) {
         return ResponseEntity.ok(planService.deactivate(id));
+    }
+
+    /**
+     * Libera um plano para a empresa, a mao.
+     *
+     * Existe enquanto nao ha gateway. A contrapartida e que so a equipe
+     * interna libera: nao ha rota equivalente para a empresa, que estaria
+     * vendendo para si mesma.
+     */
+    @Operation(summary = "Libera um plano para a empresa")
+    @PostMapping("/companies/{id}/plano")
+    public ResponseEntity<SubscriptionDTO> liberarPlano(
+        @PathVariable Long id,
+        @Valid @RequestBody LiberacaoDePlanoDTO dto,
+        @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        return ResponseEntity.ok(
+            subscriptionService.liberar(id, dto.planId(), userDetails.getUsername())
+        );
+    }
+
+    @Operation(summary = "Plano vigente da empresa")
+    @GetMapping("/companies/{id}/plano")
+    public ResponseEntity<SubscriptionDTO> planoVigente(@PathVariable Long id) {
+        return subscriptionService.vigenteDe(id)
+            .map(ResponseEntity::ok)
+            .orElseGet(() -> ResponseEntity.noContent().build());
+    }
+
+    /**
+     * O que a troca causaria, para o aviso antes da confirmacao.
+     *
+     * Leitura e nao confirmacao: o servidor informa o impacto, quem decide e
+     * quem esta olhando a tela.
+     */
+    @Operation(summary = "Impacto de trocar o plano da empresa")
+    @GetMapping("/companies/{id}/plano/impacto")
+    public ResponseEntity<ImpactoDoPlanoDTO> impactoDoPlano(
+        @PathVariable Long id,
+        @RequestParam Long planId
+    ) {
+        return ResponseEntity.ok(subscriptionService.impactoDe(id, planId));
     }
 }

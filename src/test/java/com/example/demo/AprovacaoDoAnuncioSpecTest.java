@@ -217,7 +217,19 @@ class AprovacaoDoAnuncioSpecTest extends PostgresIntegrationTest {
 
     // ---------- apoio ----------
 
+    /**
+     * Poe a empresa no estado de analise pedido.
+     *
+     * Aprovar aqui inclui liberar plano: desde a spec 30 sao dois portoes em
+     * sequencia, e esta suite mede o primeiro. Sem o segundo destrancado, "C4
+     * - empresa aprovada publica" mediria a falta de plano sem querer.
+     */
     private void estado(String email, AnalysisStatus status) {
+        if (status == AnalysisStatus.APROVADA) {
+            liberarParaAnunciar(email);
+            return;
+        }
+
         Company company = companyRepository.findByUserEmail(email).orElseThrow();
 
         company.setAnalysisStatus(status);

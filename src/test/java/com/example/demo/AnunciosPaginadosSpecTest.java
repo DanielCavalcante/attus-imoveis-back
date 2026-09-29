@@ -299,7 +299,7 @@ class AnunciosPaginadosSpecTest extends PostgresIntegrationTest {
 
         // Toda conta desta suite anuncia, e desde a spec 28 anunciar exige
         // analise aprovada.
-        aprovarEmpresa(email);
+        liberarParaAnunciar(email);
 
         return email;
     }
