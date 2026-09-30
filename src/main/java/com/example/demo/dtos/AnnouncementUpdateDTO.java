@@ -1,5 +1,6 @@
 package com.example.demo.dtos;
 import java.math.BigDecimal;
+import java.util.List;
 
 import com.example.demo.enums.PropertyType;
 import com.example.demo.enums.ReasonType;
@@ -31,9 +32,26 @@ public record AnnouncementUpdateDTO(
     @Size(max = 80)
     String street,
 
-    @NotBlank(message = "O link da imagem do anúncio é obrigatório")
-    @Size(max = 244, message = "O link da imagem deve ter no máximo 244 carateres")
+    /**
+     * A capa, espelhada. Continua aqui porque a listagem e o anuncio antigo
+     * dependem dela; quando `imagens` vem preenchida, quem manda e ela e o
+     * servico sobrescreve este campo.
+     */
+    @Size(max = 244, message = "A referência da imagem deve ter no máximo 244 caracteres")
+    // A recusa de endereco externo NAO mora aqui, e sim no servico.
+    //
+    // Anotacao nao enxerga o valor atual do anuncio, e por isso recusava o
+    // proprio endereco que ja estava gravado: os anuncios anteriores a spec 32
+    // ficavam impossiveis de editar, ate para corrigir o titulo. Quem sabe se
+    // o endereco MUDOU e o servico, e e la que a regra passa a viver.
     String image,
+
+    /** As fotos do anuncio, na ordem em que aparecem. Vazia mantem so `image`. */
+    List<String> imagens,
+
+    /** Qual das `imagens` e a capa. Nulo significa a primeira. */
+    @PositiveOrZero(message = "Índice de capa inválido")
+    Integer capa,
 
     @NotNull(message = "Número é obrigatório")
     @Positive(message = "Número inválido")
@@ -45,6 +63,10 @@ public record AnnouncementUpdateDTO(
         message = "CEP inválido"
     )
     String cep,
+
+    /** Sai do CEP quando o anunciante nao informa; informado, prevalece. */
+    @Size(max = 60)
+    String neighborhood,
 
     @Size(max = 60)
     String complement,

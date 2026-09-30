@@ -1,5 +1,8 @@
 package com.example.demo.dtos;
+import com.example.demo.enums.AccountType;
+
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size; 
 
@@ -27,6 +30,12 @@ public record UserDTO(
     @Size(max = 20, message = "Confirmação de senha deve ter no máximo 20 caracteres")
     String confirmPassword,
 
-    String photo
+    String photo,
+
+    @NotNull(message = "Tipo de conta e obrigatorio")
+    AccountType accountType,
+
+    @Size(max = 18, message = "CNPJ deve ter no maximo 18 caracteres")
+    String cnpj
 
 ) {}

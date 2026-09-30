@@ -6,6 +6,10 @@ import java.time.LocalDateTime;
 import com.example.demo.enums.PropertyType;
 import com.example.demo.enums.ReasonType;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -16,6 +20,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -106,6 +111,69 @@ public class Announcement {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    /** Mesmo motivo do cascade em User: a FK de support_requests barraria a remocao. */
+    @OneToMany(mappedBy = "announcement", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<SupportRequest> supportRequests = new ArrayList<>();
+
+    @OneToMany(mappedBy = "announcement", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Favorite> favorites = new ArrayList<>();
+
+    @OneToMany(mappedBy = "announcement", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<AnnouncementView> views = new ArrayList<>();
+
+    /**
+     * Titulo, cidade e estado em minuscula e sem acento, para a busca.
+     *
+     * Mantida aqui e nao na consulta: expressao de indice exigiria involucro
+     * IMMUTABLE sobre unaccent, e a consulta teria de ser nativa -- onde o
+     * ORDER BY do Pageable usaria o nome cru da propriedade e "createdAt" nao
+     * existe no SQL.
+     */
+    @Column(name = "search_text", columnDefinition = "TEXT")
+    private String searchText;
+
+    /**
+     * So a cidade, minuscula e sem acento, para o filtro por igualdade.
+     *
+     * Separada de searchText de proposito: aquela concatena titulo, cidade e
+     * estado, e filtrar cidade contra ela faria um anuncio chamado "Casa em
+     * Recife" localizado na Paraiba responder ao filtro de Recife.
+     */
+    @Column(name = "city_search", length = 40)
+    private String citySearch;
+
+    /**
+     * Sai do CEP que o anunciante ja digita, e pode ser corrigido por ele.
+     *
+     * Nulo e estado legitimo: CEP que nao resolve, ou servico fora do ar, nao
+     * impedem a publicacao. Anuncio sem bairro so nao responde a filtro de
+     * bairro.
+     */
+    @Size(max = 60)
+    @Column(length = 60)
+    private String neighborhood;
+
+    @Column(name = "neighborhood_search", length = 60)
+    private String neighborhoodSearch;
+
+    /**
+     * No ar ou fora do ar. Nasce ativo.
+     *
+     * Fora do ar o anuncio some do acervo publico e devolve a vaga da quota,
+     * mas continua existindo para o dono -- e o caso de quem vendeu e pode
+     * voltar a vender.
+     */
+    @Column(nullable = false)
+    private boolean active = true;
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
@@ -115,11 +183,55 @@ public class Announcement {
     @PrePersist
     public void prePersist() {
         createdAt = LocalDateTime.now();
+        atualizarBusca();
     }
 
     @PreUpdate
     public void preUpdate() {
         updatedAt = LocalDateTime.now();
+        atualizarBusca();
+    }
+
+    /** Precisa concordar com o unaccent do Postgres usado na carga das migracoes. */
+    private void atualizarBusca() {
+        String bruto = "%s %s %s".formatted(
+            title == null ? "" : title,
+            city == null ? "" : city,
+            state == null ? "" : state
+        );
+
+        searchText = normalizar(bruto);
+        citySearch = normalizar(city == null ? "" : city);
+        neighborhoodSearch = neighborhood == null ? null : normalizar(neighborhood);
+    }
+
+    public String getNeighborhood() {
+        return neighborhood;
+    }
+
+    public void setNeighborhood(String neighborhood) {
+        this.neighborhood = neighborhood;
+    }
+
+    /**
+     * Minuscula e sem acento.
+     *
+     * O bloco dos diacriticos combinantes vai como intervalo de codigo: a
+     * classe \p{...} atravessa mal as camadas de escape das ferramentas.
+     */
+    public static String normalizar(String valor) {
+        return java.text.Normalizer
+            .normalize(valor, java.text.Normalizer.Form.NFD)
+            .replaceAll("[̀-ͯ]", "")
+            .toLowerCase();
+    }
+
+    public String getSearchText() {
+        return searchText;
+    }
+
+    public String getCitySearch() {
+        return citySearch;
     }
 
     public Long getId() {

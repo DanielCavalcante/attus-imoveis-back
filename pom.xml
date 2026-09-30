@@ -20,6 +20,18 @@
         <java.version>21</java.version>
     </properties>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.google.cloud</groupId>
+                <artifactId>libraries-bom</artifactId>
+                <version>26.50.0</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
 
         <!-- WEB -->
@@ -65,6 +77,18 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- MIGRACAO DE SCHEMA -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+
+        <!-- Separado do core desde o Flyway 10; sem ele o Postgres 16 nao e reconhecido. -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+        </dependency>
+
         <!-- POSTGRES -->
         <dependency>
             <groupId>org.postgresql</groupId>
@@ -92,10 +116,55 @@
             <version>1.0.1</version>
         </dependency>
 
+        <!-- SAUDE: liveness e readiness, que e o que o orquestrador precisa
+             para saber quando reiniciar e quando rotear. So `health` fica
+             exposto; o resto do actuator continua desligado. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <!-- OBJETOS: as imagens do anuncio vivem num bucket, nunca no disco do
+             conteiner, que morre com ele e nao serve a mais de uma instancia.
+             A BOM fixa as versoes que casam entre si; sem ela, google-cloud-*
+             e as dependencias transitivas do Spring divergem de guava e grpc. -->
+        <dependency>
+            <groupId>com.google.cloud</groupId>
+            <artifactId>google-cloud-storage</artifactId>
+        </dependency>
+
         <!-- TEST -->
        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Criterios de persistencia sao provados contra Postgres de verdade. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-testcontainers</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- O emulador do Cloud Storage nos testes, como o Postgres: o caminho
+             de codigo provado e o mesmo que roda em producao. -->
+        <dependency>
+            <groupId>io.aiven</groupId>
+            <artifactId>testcontainers-fake-gcs-server</artifactId>
+            <version>0.2.0</version>
             <scope>test</scope>
         </dependency>
 
@@ -115,6 +184,20 @@
 
     <build>
         <plugins>
+
+            <!-- Empacota um jar executável (Main-Class + dependências). -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

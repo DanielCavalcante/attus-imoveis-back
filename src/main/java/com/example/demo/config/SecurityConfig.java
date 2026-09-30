@@ -41,10 +41,24 @@ public class SecurityConfig {
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
             .authorizeHttpRequests(auth -> auth
+                // Sondas sem autenticacao: quem as consulta e o orquestrador,
+                // que nao tem sessao. Nao expoem versao nem configuracao.
+                .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
                 .requestMatchers("/api/v1/auth/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/users").permitAll()
+                // A lista de contas nao e de conta comum: ela devolvia os
+                // e-mails de todo mundo para qualquer sessao.
+                .requestMatchers(HttpMethod.GET, "/api/v1/users").hasRole("INTERNO")
                 .requestMatchers(HttpMethod.GET, "/api/v1/announcements").permitAll()
+                // Antes do curinga: o primeiro casamento vence, e "/*" casava
+                // com "/me", servindo a lista da conta sem sessao.
+                .requestMatchers("/api/v1/announcements/me", "/api/v1/announcements/me/**").authenticated()
                 .requestMatchers(HttpMethod.GET, "/api/v1/announcements/*").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/plans").permitAll()
+                // A imagem e publica como o anuncio que ela ilustra; enviar,
+                // nao -- POST cai no authenticated() do final.
+                .requestMatchers(HttpMethod.GET, "/api/v1/imagens/*").permitAll()
+                .requestMatchers("/api/v1/backoffice/**").hasRole("INTERNO")
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
@@ -75,8 +89,11 @@ public class SecurityConfig {
             "http://localhost:3000" // seu Next.js
         ));
 
+        // PATCH entrou com inativar e reativar (spec 22). Sem ele o preflight
+        // reprova e o navegador nem chega a enviar a requisicao: nao aparece
+        // no log do servidor, e a tela falha sem dizer o que aconteceu.
         configuration.setAllowedMethods(List.of(
-            "GET", "POST", "PUT", "DELETE", "OPTIONS"
+            "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"
         ));
 
         configuration.setAllowedHeaders(List.of("*"));

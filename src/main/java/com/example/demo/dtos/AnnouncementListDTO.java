@@ -14,6 +14,10 @@ public class AnnouncementListDTO {
     private Long id;
     private String title;
     private String city;
+    private String neighborhood;
+
+    /** A conta precisa distinguir o que esta no ar do que nao esta. */
+    private boolean active;
     private String state;
     private String image;
     private PropertyType propertyType;
@@ -28,6 +32,8 @@ public class AnnouncementListDTO {
             .id(announcement.getId())
             .title(announcement.getTitle())
             .city(announcement.getCity())
+            .neighborhood(announcement.getNeighborhood())
+            .active(announcement.isActive())
             .state(announcement.getState())
             .image(announcement.getImage())
             .propertyType(announcement.getPropertyType())

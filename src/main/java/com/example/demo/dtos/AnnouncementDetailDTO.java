@@ -9,6 +9,7 @@ public record AnnouncementDetailDTO(
     String title,
     String description,
     String city,
+    String neighborhood,
     String state,
     String street,
     String image,
@@ -20,5 +21,11 @@ public record AnnouncementDetailDTO(
     Integer rooms,
     Integer bathRooms,
     BigDecimal area,
-    BigDecimal price
+    BigDecimal price,
+
+    /**
+     * Todas as fotos, na ordem, com a capa na frente da lista sinalizada por
+     * `image`. Anuncio de antes da spec 34 responde com uma so.
+     */
+    java.util.List<String> imagens
 ) {}

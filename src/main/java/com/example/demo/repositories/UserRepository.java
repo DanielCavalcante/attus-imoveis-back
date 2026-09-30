@@ -1,5 +1,6 @@
 package com.example.demo.repositories;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -19,5 +20,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByEmail(String email);
 
     boolean existsByPhone(String phone);
+
+    boolean existsByCnpj(String cnpj);
+
+    /** Conta anterior a distincao PF/PJ. Consultar e melhor que trazer a tabela e filtrar. */
+    List<User> findAllByAccountTypeIsNull();
 
 }

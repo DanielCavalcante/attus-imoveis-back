@@ -1,4 +1,6 @@
-version: "3.8"
+# Orquestra o projeto inteiro: banco + API (este repo) + web (../attus-imoveis-front).
+# Assume os dois repositórios lado a lado em C:\marcos-code\.
+name: attus-imoveis
 
 services:
   postgres:
@@ -13,6 +15,81 @@ services:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d imoveis-challenge-db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Emulador do Cloud Storage. Fala o mesmo protocolo do GCS, entao a API usa
+  # o mesmo cliente e o mesmo codigo dos dois lados -- so o endereco muda.
+  # `-scheme http` porque em rede de compose nao ha TLS para validar.
+  gcs:
+    image: fsouza/fake-gcs-server
+    container_name: attus-imoveis-gcs
+    restart: always
+    command: ["-scheme", "http", "-port", "4443", "-public-host", "gcs:4443"]
+    ports:
+      - "4443:4443"
+    volumes:
+      # O bucket precisa existir antes do primeiro upload: o emulador cria um
+      # por diretorio que encontrar aqui.
+      - ./dev/gcs/attus-imoveis-dev:/data/attus-imoveis-dev
+
+  api:
+    build:
+      context: .
+    container_name: attus-imoveis-api
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+      gcs:
+        condition: service_started
+    environment:
+      # Sobrescreve application.properties via relaxed binding do Spring.
+      # O perfil dev traz de volta o que antes era padrao embutido: chave de
+      # desenvolvimento, origem do CORS, bucket e SQL no log.
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/imoveis-challenge-db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      JWT_SECRET: ${JWT_SECRET:-33YAIuZ5P9QDy3rysBBLAEFglXNLsAHQ}
+      # Conta da equipe interna. Valores de desenvolvimento; em producao estas
+      # mesmas variaveis vem do Terraform, nunca do repositorio.
+      ATTUS_BOOTSTRAP_INTERNAL_EMAIL: ${ATTUS_BOOTSTRAP_INTERNAL_EMAIL:-interno@attus.dev}
+      ATTUS_BOOTSTRAP_INTERNAL_PASSWORD: ${ATTUS_BOOTSTRAP_INTERNAL_PASSWORD:-InternoDev123}
+      ATTUS_BOOTSTRAP_INTERNAL_PHONE: ${ATTUS_BOOTSTRAP_INTERNAL_PHONE:-11900000001}
+      # Em producao ATTUS_IMAGENS_EMULADOR fica vazio e vale a credencial
+      # padrao do ambiente (ADC): nenhuma chave de servico no repositorio.
+      ATTUS_IMAGENS_BUCKET: ${ATTUS_IMAGENS_BUCKET:-attus-imoveis-dev}
+      ATTUS_IMAGENS_EMULADOR: ${ATTUS_IMAGENS_EMULADOR:-http://gcs:4443}
+    ports:
+      - "8080:8080"
+
+  web:
+    build:
+      context: ../attus-imoveis-front
+      args:
+        # NEXT_PUBLIC_* e embutido no build, nao lido em runtime: por isso vem
+        # como build arg, e nao em `environment`.
+        NEXT_PUBLIC_CONTATO_EMAIL: ${NEXT_PUBLIC_CONTATO_EMAIL:-contato@encontrei.com.br}
+        NEXT_PUBLIC_CONTATO_TELEFONE: ${NEXT_PUBLIC_CONTATO_TELEFONE:-}
+        # NEXT_PUBLIC_* e embutido no build: e por isso que a imagem do web
+        # carrega o endereco com que foi construida, e cada ambiente tem a sua.
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080/api/v1}
+    container_name: attus-imoveis-web
+    restart: always
+    environment:
+      # Endereco da API visto de dentro da rede do compose. O sitemap roda no
+      # servidor, e la `localhost` e o proprio conteiner do web.
+      ATTUS_API_INTERNA: ${ATTUS_API_INTERNA:-http://api:8080/api/v1}
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
+    depends_on:
+      - api
+    ports:
+      - "3000:3000"
 
 volumes:
   postgres_data:

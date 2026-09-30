@@ -5,10 +5,18 @@ import java.util.Collection;
 import java.util.List;
 
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import com.example.demo.enums.AccountStatus;
+import com.example.demo.enums.AccountType;
+import com.example.demo.enums.UserRole;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -38,7 +46,27 @@ public class User implements UserDetails {
     @Column(length = 120)
     private String photo;
 
-    @OneToMany(mappedBy = "user")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "account_type", length = 20)
+    private AccountType accountType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "account_status", length = 30)
+    private AccountStatus accountStatus;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private UserRole role;
+
+    /** Obrigatorio para PJ, nulo para PF. Unicidade garantida no banco. */
+    @Column(length = 18, unique = true)
+    private String cnpj;
+
+    /**
+     * Cascade por ciclo de vida: sem ele, apagar uma conta com anuncio esbarra
+     * na chave estrangeira de announcements e devolve 500.
+     */
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Announcement> announcements = new ArrayList<>();
 
     public Long getId() {
@@ -89,6 +117,38 @@ public class User implements UserDetails {
         this.photo = photo;
     }
 
+    public AccountType getAccountType() {
+        return accountType;
+    }
+
+    public void setAccountType(AccountType accountType) {
+        this.accountType = accountType;
+    }
+
+    public AccountStatus getAccountStatus() {
+        return accountStatus;
+    }
+
+    public void setAccountStatus(AccountStatus accountStatus) {
+        this.accountStatus = accountStatus;
+    }
+
+    public UserRole getRole() {
+        return role;
+    }
+
+    public void setRole(UserRole role) {
+        this.role = role;
+    }
+
+    public String getCnpj() {
+        return cnpj;
+    }
+
+    public void setCnpj(String cnpj) {
+        this.cnpj = cnpj;
+    }
+
     public List<Announcement> getAnnouncements() {
         return announcements;
     }
@@ -100,7 +160,11 @@ public class User implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority>
     getAuthorities() {
-        return List.of();
+        if (role == null) {
+            return List.of();
+        }
+
+        return List.of(new SimpleGrantedAuthority(role.authority()));
     }
 
     @Override

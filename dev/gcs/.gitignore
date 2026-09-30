@@ -1,0 +1,4 @@
+# Os objetos que o emulador guarda em desenvolvimento. O diretorio do bucket
+# precisa existir (o emulador cria um bucket por diretorio); o conteudo, nao.
+*/*
+!*/.gitkeep
