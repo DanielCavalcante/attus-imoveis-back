@@ -8,7 +8,6 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.demo.integracoes.ConsultaDeCep;
 import com.example.demo.model.Announcement;
 import com.example.demo.repositories.AnnouncementRepository;
 
@@ -32,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 public class CargaDeBairros {
 
     private final AnnouncementRepository repository;
-    private final ConsultaDeCep consultaDeCep;
+    private final EnderecoService enderecoService;
 
     @Value("${attus.bairros.carga-inicial:false}")
     private boolean ligada;
@@ -55,7 +54,7 @@ public class CargaDeBairros {
         int preenchidos = 0;
 
         for (Announcement anuncio : semBairro) {
-            String bairro = consultaDeCep.bairroDe(anuncio.getCep()).orElse(null);
+            String bairro = enderecoService.bairroDe(anuncio.getCep()).orElse(null);
 
             if (bairro != null) {
                 anuncio.setNeighborhood(bairro);

@@ -17,6 +17,7 @@ import com.example.demo.exceptions.custom.BusinessException;
 import com.example.demo.exceptions.custom.ConflictException;
 import com.example.demo.exceptions.custom.PublicacaoBloqueadaException;
 import com.example.demo.exceptions.custom.ResourceNotFoundException;
+import com.example.demo.exceptions.custom.ServicoIndisponivelException;
 import com.example.demo.exceptions.models.ApiError;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -82,6 +83,15 @@ public class GlobalExceptionHandler {
         ApiError error = new ApiError(HttpStatus.FORBIDDEN.value(), ex.getMessage(), LocalDateTime.now());
 
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+    }
+
+    @ExceptionHandler(ServicoIndisponivelException.class)
+    public ResponseEntity<ApiError> handleIndisponivel(ServicoIndisponivelException ex) {
+        ApiError error = new ApiError(
+            HttpStatus.SERVICE_UNAVAILABLE.value(), ex.getMessage(), LocalDateTime.now()
+        );
+
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(error);
     }
 
     /** A mensagem nomeia o campo reprovado: sem isso quem consome nao sabe o que corrigir. */

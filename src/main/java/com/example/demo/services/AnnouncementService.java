@@ -46,7 +46,7 @@ public class AnnouncementService {
     private final AnnouncementRepository repository;
     private final UserRepository userRepository;
     private final AnnouncementMapper mapper;
-    private final com.example.demo.integracoes.ConsultaDeCep consultaDeCep;
+    private final EnderecoService enderecoService;
     private final com.example.demo.repositories.NeighborhoodRepository neighborhoodRepository;
     private final com.example.demo.repositories.CompanyRepository companyRepository;
     private final com.example.demo.repositories.SubscriptionRepository subscriptionRepository;
@@ -234,7 +234,7 @@ public class AnnouncementService {
             return;
         }
 
-        entity.setNeighborhood(consultaDeCep.bairroDe(cep).orElse(null));
+        entity.setNeighborhood(enderecoService.bairroDe(cep).orElse(null));
     }
 
     /**

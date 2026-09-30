@@ -56,13 +56,28 @@ class BairroDoAnuncioSpecTest extends PostgresIntegrationTest {
         boolean foraDoAr = false;
 
         @Override
-        public Optional<String> bairroDe(String cep) {
+        public Resultado consultar(String cep) {
             if (foraDoAr) {
                 // O contrato diz que nunca lanca: quem trata a queda e aqui.
-                return Optional.empty();
+                return Resultado.indisponivel();
             }
 
-            return Optional.ofNullable(bairros.get(cep));
+            // A chave e normalizada dos dois lados: desde a spec 37 quem
+            // pergunta ja manda so os digitos, e o teste escreve o CEP como
+            // uma pessoa escreveria, com hifen.
+            String bairro = bairros.entrySet().stream()
+                .filter(e -> e.getKey().replaceAll("[^0-9]", "").equals(cep))
+                .map(Map.Entry::getValue)
+                .findFirst()
+                .orElse(null);
+
+            if (bairro == null) {
+                return Resultado.naoEncontrado();
+            }
+
+            return Resultado.encontrado(new com.example.demo.dtos.EnderecoDTO(
+                cep, "Rua do duble", bairro, "João Pessoa", "PB"
+            ));
         }
     }
 
@@ -79,6 +94,9 @@ class BairroDoAnuncioSpecTest extends PostgresIntegrationTest {
     private JwtService jwtService;
 
     @Autowired
+    private com.example.demo.repositories.EnderecoRepository enderecoRepository;
+
+    @Autowired
     private ConsultaDeCep consultaDeCep;
 
     @Autowired
@@ -91,6 +109,10 @@ class BairroDoAnuncioSpecTest extends PostgresIntegrationTest {
     void preparar() throws Exception {
         announcementRepository.deleteAll();
         userRepository.deleteAll();
+        // Desde a spec 37 o que ja foi resolvido fica guardado em tabela, e
+        // isso atravessa testes: sem limpar, o CEP resolvido por um teste
+        // anterior responderia sem o duble ser consultado.
+        enderecoRepository.deleteAll();
 
         cep = (Duble) consultaDeCep;
         cep.bairros.clear();
