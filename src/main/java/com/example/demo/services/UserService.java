@@ -35,9 +35,8 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public UserDetailDTO findOne(Long id) { 
-        User user = findUserById(id);
-        return toDetailDTO(user);
+    public UserDetailDTO findOne(Long id, String email) {
+        return toDetailDTO(daSessao(id, email));
     }
 
     @Transactional
@@ -71,8 +70,8 @@ public class UserService {
     }
 
     @Transactional
-    public UserDetailDTO edit(Long id, UserUpdateDTO dto) {
-        User entity = findUserById(id);
+    public UserDetailDTO edit(Long id, UserUpdateDTO dto, String email) {
+        User entity = daSessao(id, email);
 
         validateEmailUpdate(dto.email(), entity);
         validatePhoneUpdate(dto.phone(), entity);
@@ -84,9 +83,33 @@ public class UserService {
     }
 
     @Transactional
-    public void delete(Long id) {
-        User entity = findUserById(id);
-        repository.delete(entity);
+    public void delete(Long id, String email) {
+        repository.delete(daSessao(id, email));
+    }
+
+    /**
+     * A conta da sessao, e so ela.
+     *
+     * O id do caminho nao identifica ninguem: ele e conferido contra a sessao
+     * e serve apenas para recusar caminho que nao e o proprio. Enquanto a
+     * identidade vinha de fora, cada rota nova precisava lembrar de conferir
+     * -- e nenhuma das quatro lembrava. Medido antes desta spec: uma conta
+     * comum listava os 14 usuarios, lia o detalhe de outra, gravava nome na
+     * conta alheia (200) e a excluia (204).
+     *
+     * 404 e nao 403 para conta que nao e a sua, pelo mesmo motivo do `doDono`
+     * da spec 22: responder "existe, mas nao e seu" conta ao curioso que
+     * aquele id existe, e com id sequencial isso enumera a base inteira.
+     */
+    private User daSessao(Long id, String email) {
+        User sessao = repository.findByEmail(email)
+            .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
+
+        if (!sessao.getId().equals(id)) {
+            throw new ResourceNotFoundException("Usuário não encontrado");
+        }
+
+        return sessao;
     }
 
     private User findUserById(Long id) {
@@ -128,7 +151,7 @@ public class UserService {
 
     private void validateEmailUpdate(String email, User user) {         
         boolean emailExists = repository.existsByEmail(email);
-        boolean sameEmail = email.equals(user.getEmail());
+        boolean sameEmail = java.util.Objects.equals(email, user.getEmail());
 
         if (emailExists && !sameEmail) {
             throw new BusinessException("E-mail já cadastrado");
@@ -137,7 +160,7 @@ public class UserService {
 
     private void validatePhoneUpdate(String phone, User user) {
         boolean phoneExists = repository.existsByPhone(phone);
-        boolean samePhone = phone.equals(user.getPhone());
+        boolean samePhone = java.util.Objects.equals(phone, user.getPhone());
 
         if (phoneExists && !samePhone) {
             throw new BusinessException("Telefone já cadastrado");

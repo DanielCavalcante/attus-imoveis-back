@@ -12,6 +12,11 @@ public record UserUpdateDTO(
     String fullname,
 
     @Email(message = "Email inválido")
+    // Obrigatorio porque a atualizacao SUBSTITUI o campo: sem valor, ela
+    // apagaria o e-mail da conta. Sem esta anotacao, corpo sem e-mail chegava
+    // a `email.equals(...)` e estourava dentro da validacao -- quem integrava
+    // via a falha como problema de permissao, nao de campo faltando.
+    @NotBlank(message = "E-mail é obrigatório")
     @Size(max = 40, message = "E-mail deve ter no máximo 40 caracteres")
     String email,
 

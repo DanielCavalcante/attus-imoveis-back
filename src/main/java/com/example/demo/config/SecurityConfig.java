@@ -43,6 +43,9 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/v1/auth/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/users").permitAll()
+                // A lista de contas nao e de conta comum: ela devolvia os
+                // e-mails de todo mundo para qualquer sessao.
+                .requestMatchers(HttpMethod.GET, "/api/v1/users").hasRole("INTERNO")
                 .requestMatchers(HttpMethod.GET, "/api/v1/announcements").permitAll()
                 // Antes do curinga: o primeiro casamento vence, e "/*" casava
                 // com "/me", servindo a lista da conta sem sessao.
