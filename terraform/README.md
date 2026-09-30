@@ -40,7 +40,7 @@ gcloud storage buckets update gs://SEU_PROJETO-tfstate --versioning
 #    menos, e recusa na subida. Roda DEPOIS do primeiro apply, que e quem cria
 #    o segredo vazio.
 openssl rand -base64 48 | tr -d '
-' |   gcloud secrets versions add attus-prod-jwt --data-file=-
+' | gcloud secrets versions add attus-prod-jwt --data-file=-
 ```
 
 **A senha do banco nao esta ai, e a diferenca e proposital.** O Terraform
