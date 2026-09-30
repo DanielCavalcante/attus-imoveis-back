@@ -114,6 +114,7 @@ resource "google_cloud_run_v2_service" "api" {
 
   depends_on = [
     google_secret_manager_secret_iam_member.api_nos_segredos,
+    google_secret_manager_secret_version.senha_do_banco,
     google_project_service.necessarios,
   ]
 }

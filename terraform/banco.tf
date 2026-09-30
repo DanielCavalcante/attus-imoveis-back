@@ -34,16 +34,30 @@ resource "google_sql_database" "aplicacao" {
   instance = google_sql_database_instance.principal.name
 }
 
+# A senha do banco e SORTEADA aqui, e nao trazida de fora.
+#
+# A distincao que falta quando se trata "segredo" como uma coisa so: o
+# Terraform PRECISA conhecer esta senha, porque e ele quem cria o usuario do
+# banco. A chave JWT ele nunca precisa conhecer -- quem a le e a aplicacao, em
+# tempo de execucao, direto do Secret Manager.
+#
+# A primeira versao desta configuracao lia a senha por `data source`, de uma
+# versao de segredo que o README mandava criar DEPOIS do primeiro apply. O
+# `plan` mostrou a ordem impossivel: o apply precisaria do valor para criar o
+# usuario, e o valor so existiria depois do apply.
+resource "random_password" "banco" {
+  length  = 32
+  special = false
+}
+
 resource "google_sql_user" "aplicacao" {
   name     = "attus"
   instance = google_sql_database_instance.principal.name
-
-  # A senha vem do Secret Manager, gravada fora do Terraform: valor que passa
-  # pelo estado fica em claro no bucket do estado.
-  password_wo         = data.google_secret_manager_secret_version.senha_do_banco.secret_data
-  password_wo_version = data.google_secret_manager_secret_version.senha_do_banco.version
+  password = random_password.banco.result
 }
 
-data "google_secret_manager_secret_version" "senha_do_banco" {
-  secret = google_secret_manager_secret.senha_do_banco.id
+# A mesma senha vai para o Secret Manager, que e de onde o Cloud Run a le.
+resource "google_secret_manager_secret_version" "senha_do_banco" {
+  secret      = google_secret_manager_secret.senha_do_banco.id
+  secret_data = random_password.banco.result
 }
