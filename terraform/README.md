@@ -36,18 +36,23 @@ gcloud storage buckets create gs://SEU_PROJETO-tfstate \
   --location=southamerica-east1 --uniform-bucket-level-access
 gcloud storage buckets update gs://SEU_PROJETO-tfstate --versioning
 
-# 2. Os segredos. O Terraform declara o contêiner; o valor entra por aqui.
-#    A chave precisa de 32 bytes no mínimo — a spec 40 recusa menos, e recusa
-#    na subida.
-openssl rand -base64 48 | tr -d '\n' | \
-  gcloud secrets versions add attus-prod-jwt --data-file=-
-openssl rand -base64 32 | tr -d '\n' | \
-  gcloud secrets versions add attus-prod-senha-do-banco --data-file=-
+# 2. A chave de assinatura. Precisa de 32 bytes no minimo -- a spec 40 recusa
+#    menos, e recusa na subida. Roda DEPOIS do primeiro apply, que e quem cria
+#    o segredo vazio.
+openssl rand -base64 48 | tr -d '
+' |   gcloud secrets versions add attus-prod-jwt --data-file=-
 ```
 
-Os dois `gcloud secrets versions add` só funcionam depois do primeiro `apply`,
-que é quem cria os segredos vazios. O serviço não sobe sem eles: é o
-comportamento que a spec 40 exige.
+**A senha do banco nao esta ai, e a diferenca e proposital.** O Terraform
+*precisa* conhece-la -- e ele quem cria o usuario do banco --, entao ela e
+sorteada por ele e gravada no Secret Manager no mesmo `apply`. A chave JWT ele
+nunca precisa conhecer: quem a le e a aplicacao, em tempo de execucao.
+
+Tratar "segredo" como uma coisa so foi o que produziu a primeira versao desta
+configuracao, que lia a senha de uma versao criada *depois* do `apply` que
+precisava dela -- ordem impossivel, que so o `plan` contra o GCP revelou.
+
+O servico nao sobe sem a chave JWT: e o comportamento que a spec 40 exige.
 
 ## Aplicar
 
