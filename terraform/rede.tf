@@ -36,3 +36,50 @@ resource "google_service_networking_connection" "banco" {
   service                 = "servicenetworking.googleapis.com"
   reserved_peering_ranges = [google_compute_global_address.faixa_do_banco.name]
 }
+
+# ---------------------------------------------------------------------------
+# Como o site alcanca uma API que nao tem entrada da internet.
+#
+# `run.app` e um dominio publico: resolvido normalmente, ele aponta para um IP
+# publico, e a saida do site iria para a internet em vez de atravessar esta
+# VPC. Chegando de fora, `INGRESS_TRAFFIC_INTERNAL_ONLY` recusa -- e o Cloud
+# Run recusa com **404**, nao com 403, o que faz o sintoma parecer rota errada
+# em vez de bloqueio de rede. Foi exatamente o que aconteceu no primeiro
+# deploy: o site subiu, a API subiu, e todo `/api/v1/...` voltava 404.
+#
+# A saida e resolver `run.app` DENTRO da VPC para a faixa de acesso privado do
+# Google. Com `private_ip_google_access` ligado na sub-rede, a requisicao vai
+# ao Cloud Run sem nunca sair para a internet -- e chega como interna.
+#
+# A alternativa seria um Cloud NAT, que resolveria o mesmo e custa por hora de
+# gateway parado. Para uma validacao, nao se justifica.
+
+resource "google_dns_managed_zone" "run_app" {
+  name        = "attus-${var.ambiente}-run-app"
+  dns_name    = "run.app."
+  description = "Resolve run.app para o acesso privado do Google, dentro da VPC"
+
+  visibility = "private"
+
+  private_visibility_config {
+    networks {
+      network_url = google_compute_network.privada.id
+    }
+  }
+
+  depends_on = [google_project_service.necessarios]
+}
+
+# `private.googleapis.com`, e nao `restricted`: a faixa restrita exige VPC
+# Service Controls, que nao existe aqui, e sem eles ela simplesmente nao
+# responde.
+resource "google_dns_record_set" "run_app" {
+  for_each = toset(["run.app.", "*.run.app."])
+
+  managed_zone = google_dns_managed_zone.run_app.name
+  name         = each.value
+  type         = "A"
+  ttl          = 300
+
+  rrdatas = ["199.36.153.8", "199.36.153.9", "199.36.153.10", "199.36.153.11"]
+}

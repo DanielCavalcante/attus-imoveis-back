@@ -15,17 +15,32 @@ set -euo pipefail
 PROJETO="mei-tranquilo-501616"
 NUMERO="279337898922"
 REGIAO="southamerica-east1"
+AMBIENTE="prod"
 ESTADO="mei-tranquilo-501616-attus-tfstate"
 REGISTRO="${REGIAO}-docker.pkg.dev/${PROJETO}/attus-prod"
 BACK="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 FRONT="$(cd "$BACK/../attus-imoveis-front" && pwd)"
 
-# A URL do site é previsível no Cloud Run: <serviço>-<número do projeto>.
-# Isso é o que permite construir a imagem UMA vez -- NEXT_PUBLIC_* é embutido
-# no build, e sem previsão seriam dois builds e dois deploys.
-URL_DO_SITE="https://attus-site-prod-${NUMERO}.${REGIAO}.run.app"
+# A URL do site precisa ser conhecida ANTES do build: NEXT_PUBLIC_* e embutido
+# no bundle, e e ela que vai no canonical, no Open Graph e no sitemap.
+#
+# Prever nao funciona. O formato `<servico>-<numero do projeto>.<regiao>` saiu
+# de linha: o Cloud Run passou a emitir `<servico>-<hash>-<sigla>.a.run.app`,
+# e o endereco real do primeiro deploy nao foi o previsto -- o `robots.txt`
+# em producao apontou o sitemap para um host que nao existe.
+#
+# Entao perguntamos ao servico. Na primeira vez ele ainda nao existe, e o
+# fallback e a previsao antiga: a imagem sai com um endereco provavelmente
+# errado, o passo 6 cria o servico, e a checagem do fim manda repetir os
+# passos 4 e 6 -- que ai ja acham a URL de verdade.
+URL_DO_SITE="$(gcloud run services describe "attus-site-${AMBIENTE}"   --region="${REGIAO}" --project="${PROJETO}"   --format='value(status.url)' 2>/dev/null || true)"
 
-CONTA_DO_SITE="attus-site-prod@${PROJETO}.iam.gserviceaccount.com"
+if [ -z "${URL_DO_SITE}" ]; then
+  URL_DO_SITE="https://attus-site-${AMBIENTE}-${NUMERO}.${REGIAO}.run.app"
+  echo "servico ainda nao existe; usando endereco previsto ${URL_DO_SITE}"
+fi
+
+CONTA_DO_SITE="attus-site-${AMBIENTE}@${PROJETO}.iam.gserviceaccount.com"
 FALSO="sha256:0000000000000000000000000000000000000000000000000000000000000000"
 
 passo() { printf "\n\033[1m==> %s\033[0m\n" "$1"; }

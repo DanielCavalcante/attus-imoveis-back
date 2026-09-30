@@ -30,6 +30,7 @@ resource "google_project_service" "necessarios" {
     "servicenetworking.googleapis.com",
     "compute.googleapis.com",
     "iam.googleapis.com",
+    "dns.googleapis.com",
   ])
 
   service = each.value
