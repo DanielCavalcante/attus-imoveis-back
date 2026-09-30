@@ -72,10 +72,6 @@ uma intenção mal escrita.
 
 ## Perguntas em aberto
 
-- **"O usuário tem acesso apenas ao cadastro do usuário e nada mais" — o que
-  isso restringe?** As leituras possíveis levam a infraestruturas diferentes:
-  (a) permissão no GCP, e aí é a conta de serviço da API que só pode o que
-  precisa — já coberto por C6; (b) rota pública, e aí haveria uma exceção ao
-  C2 deixando `POST /users` alcançável de fora, o que contradiz o site ser o
-  único ponto de entrada; (c) papel no produto, e aí é regra de negócio, não
-  infraestrutura. Insumo que falta: qual das três.
+Nenhuma. A que existia -- o que "o usuário tem acesso apenas ao cadastro do
+usuário" restringe -- foi respondida: é regra do produto, não infraestrutura.
+Virou a spec 45, e não muda nada aqui.
