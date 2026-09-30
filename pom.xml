@@ -116,6 +116,14 @@
             <version>1.0.1</version>
         </dependency>
 
+        <!-- SAUDE: liveness e readiness, que e o que o orquestrador precisa
+             para saber quando reiniciar e quando rotear. So `health` fica
+             exposto; o resto do actuator continua desligado. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
         <!-- OBJETOS: as imagens do anuncio vivem num bucket, nunca no disco do
              conteiner, que morre com ele e nao serve a mais de uma instancia.
              A BOM fixa as versoes que casam entre si; sem ela, google-cloud-*

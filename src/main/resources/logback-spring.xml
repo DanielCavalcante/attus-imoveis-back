@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Log legivel para gente em desenvolvimento, e JSON em uma linha fora dele.
+
+  O Cloud Logging le uma linha por evento e indexa os campos. Log multilinha
+  de humano vira um evento por LINHA la dentro: uma excecao com vinte linhas
+  de pilha vira vinte registros soltos, e nenhum deles tem a mensagem.
+-->
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <springProfile name="dev">
+        <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+
+    <springProfile name="!dev">
+        <appender name="JSON" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+                <layout class="ch.qos.logback.classic.PatternLayout">
+                    <!-- `severity` e `message` sao os nomes que o Cloud Logging
+                         reconhece sem configuracao adicional. -->
+                    <pattern>{"severity":"%level","time":"%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX,UTC}","logger":"%logger{40}","message":"%replace(%msg){'"','\\"'}%replace(%ex){'"','\\"'}"}%n</pattern>
+                </layout>
+            </encoder>
+        </appender>
+
+        <root level="INFO">
+            <appender-ref ref="JSON"/>
+        </root>
+    </springProfile>
+</configuration>

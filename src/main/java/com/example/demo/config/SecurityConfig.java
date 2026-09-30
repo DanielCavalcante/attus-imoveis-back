@@ -41,6 +41,9 @@ public class SecurityConfig {
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
             .authorizeHttpRequests(auth -> auth
+                // Sondas sem autenticacao: quem as consulta e o orquestrador,
+                // que nao tem sessao. Nao expoem versao nem configuracao.
+                .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
                 .requestMatchers("/api/v1/auth/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/users").permitAll()
                 // A lista de contas nao e de conta comum: ela devolvia os

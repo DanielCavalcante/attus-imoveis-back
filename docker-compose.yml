@@ -48,6 +48,9 @@ services:
         condition: service_started
     environment:
       # Sobrescreve application.properties via relaxed binding do Spring.
+      # O perfil dev traz de volta o que antes era padrao embutido: chave de
+      # desenvolvimento, origem do CORS, bucket e SQL no log.
+      SPRING_PROFILES_ACTIVE: dev
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/imoveis-challenge-db
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
