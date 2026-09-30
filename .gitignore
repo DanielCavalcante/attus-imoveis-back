@@ -31,3 +31,11 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Terraform: estado e providers nao vao para o repositorio. O estado mora em
+# bucket (spec 43, C8) e guarda em claro tudo que passa por ele.
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/*.tfvars
