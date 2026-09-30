@@ -13,6 +13,15 @@ resource "google_sql_database_instance" "principal" {
   deletion_protection = false
 
   settings {
+    # ENTERPRISE, e nao o ENTERPRISE_PLUS que o Cloud SQL passou a assumir por
+    # padrao: o `db-f1-micro` nao existe na edicao PLUS, que so aceita tiers
+    # `db-perf-optimized-N-*`. O apply real recusou com
+    # "Invalid Tier (db-f1-micro) for (ENTERPRISE_PLUS) Edition".
+    #
+    # PLUS tambem custa varias vezes mais, e o objetivo aqui e validacao no
+    # menor porte possivel.
+    edition = "ENTERPRISE"
+
     # O menor porte que roda Postgres 16. Sobe depois de medir.
     tier = "db-f1-micro"
 
