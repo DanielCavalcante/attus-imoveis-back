@@ -137,6 +137,36 @@ public class AnnouncementService {
     }
 
     /**
+     * Endereco externo so passa se ja era o do proprio anuncio.
+     *
+     * A spec 32 fechou a porta para imagem hospedada fora, e isso continua
+     * valendo: trocar por OUTRO endereco externo e recusado. Mas devolver o
+     * que ja estava gravado nao e apontar para outro host -- e preservar. Sem
+     * esta distincao, os anuncios anteriores aquela spec ficavam impossiveis
+     * de editar, ate para corrigir o titulo.
+     */
+    private void recusarEnderecoExternoNovo(List<String> fotos, Announcement anuncio) {
+        java.util.Set<String> jaEram = new java.util.HashSet<>();
+
+        if (anuncio.getImage() != null) {
+            jaEram.add(anuncio.getImage());
+        }
+
+        imagemRepository.findByAnnouncementIdOrderByPosicaoAsc(anuncio.getId())
+            .forEach(imagem -> jaEram.add(ImagemService.caminhoDe(imagem.getObjectName())));
+
+        for (String foto : fotos) {
+            boolean externa = foto.startsWith("http://") || foto.startsWith("https://");
+
+            if (externa && !jaEram.contains(foto)) {
+                throw new BusinessException(
+                    "A imagem deve ser enviada, e não um endereço externo"
+                );
+            }
+        }
+    }
+
+    /**
      * A foto tem de ter sido enviada por quem esta anunciando.
      *
      * Sem isto, o identificador que o envio devolve vira referencia que
@@ -417,6 +447,8 @@ public class AnnouncementService {
 
         List<String> fotos = fotosDe(dto.imagens(), dto.image(), email);
         int capa = indiceDaCapa(dto.capa(), fotos.size());
+
+        recusarEnderecoExternoNovo(fotos, entity);
 
         mapper.updateEntity(dto, entity);
         entity.setImage(fotos.get(capa));

@@ -230,9 +230,26 @@ class ImagemDoAnuncioSpecTest extends PostgresIntegrationTest {
     }
 
     @Test
-    @DisplayName("C13 - anuncio antigo com endereco externo continua sendo devolvido")
-    void c13() throws Exception {
-        // Gravado por baixo do contrato novo, como os que ja existiam.
+    @DisplayName("C12 - editar mantendo o endereco que ja era dele e permitido")
+    void c12MantemOProprio() throws Exception {
+        // Anuncio anterior a spec 32: a imagem dele e um endereco externo, e
+        // devolve-lo inalterado nao e apontar para outro host -- e preservar.
+        // Sem isto, esses anuncios ficavam impossiveis de editar, ate para
+        // corrigir o titulo.
+        com.example.demo.model.Announcement antigo = anuncioComEnderecoExterno();
+        long id = announcementRepository.saveAndFlush(antigo).getId();
+
+        mockMvc.perform(put("/api/v1/announcements/" + id)
+                .header("Authorization", "Bearer " + tokenDe(dono))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(corpoComImagem("https://images.unsplash.com/antigo.jpg")
+                    .replace("Casa da spec 32", "Titulo corrigido")))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.title").value("Titulo corrigido"));
+    }
+
+    /** Gravado por baixo do contrato novo, como os que ja existiam. */
+    private com.example.demo.model.Announcement anuncioComEnderecoExterno() {
         com.example.demo.model.Announcement antigo = new com.example.demo.model.Announcement();
 
         antigo.setTitle("Anuncio de antes da spec 32");
@@ -251,7 +268,13 @@ class ImagemDoAnuncioSpecTest extends PostgresIntegrationTest {
         antigo.setArea(new java.math.BigDecimal("70"));
         antigo.setUser(userRepository.findByEmail(dono).orElseThrow());
 
-        long id = announcementRepository.saveAndFlush(antigo).getId();
+        return antigo;
+    }
+
+    @Test
+    @DisplayName("C13 - anuncio antigo com endereco externo continua sendo devolvido")
+    void c13() throws Exception {
+        long id = announcementRepository.saveAndFlush(anuncioComEnderecoExterno()).getId();
 
         mockMvc.perform(get("/api/v1/announcements/" + id))
             .andExpect(status().isOk())

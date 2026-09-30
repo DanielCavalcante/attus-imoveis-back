@@ -38,20 +38,16 @@ public record AnnouncementUpdateDTO(
      * servico sobrescreve este campo.
      */
     @Size(max = 244, message = "A referência da imagem deve ter no máximo 244 caracteres")
-    // E isto que faz a mudanca ser seguranca, e nao interface: sem recusar o
-    // endereco externo aqui, bastaria nao usar a tela para voltar a apontar
-    // para qualquer host. A imagem tem de ter sido enviada para o bucket.
-    @Pattern(
-        regexp = "^(?!\s*https?://).*",
-        message = "A imagem deve ser enviada, e não um endereço externo"
-    )
+    // A recusa de endereco externo NAO mora aqui, e sim no servico.
+    //
+    // Anotacao nao enxerga o valor atual do anuncio, e por isso recusava o
+    // proprio endereco que ja estava gravado: os anuncios anteriores a spec 32
+    // ficavam impossiveis de editar, ate para corrigir o titulo. Quem sabe se
+    // o endereco MUDOU e o servico, e e la que a regra passa a viver.
     String image,
 
     /** As fotos do anuncio, na ordem em que aparecem. Vazia mantem so `image`. */
-    List<@Pattern(
-        regexp = "^(?!\s*https?://).*",
-        message = "A imagem deve ser enviada, e não um endereço externo"
-    ) String> imagens,
+    List<String> imagens,
 
     /** Qual das `imagens` e a capa. Nulo significa a primeira. */
     @PositiveOrZero(message = "Índice de capa inválido")
